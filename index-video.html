@@ -681,7 +681,7 @@ svg.lucide { stroke-width: 1.8; }
         <div class="lab-status is-pending"><span class="lab-dot"></span><span class="lab-text">待启动</span></div>
         <span class="lab-tag">AMix · SANDBOX-04</span>
         <div class="lab-video-wrap">
-          <video id="labVideo" src="asset/lab.mp4" autoplay loop muted playsinline></video>
+          <video id="labVideo" src="asset/lab.mp4" loop muted playsinline preload="auto"></video>
         </div>
         <div class="lab-scan"></div>
         <div class="lab-readout">
@@ -748,6 +748,7 @@ svg.lucide { stroke-width: 1.8; }
     const labContent = document.getElementById('labContent');
     const labStatus  = document.querySelector('.lab-status');
     const labText    = document.querySelector('.lab-text');
+    const labVideo   = document.getElementById('labVideo');
     const m3Progress = document.getElementById('m3Progress');
     const bridge     = document.getElementById('particleBridge');
     const M3_DUR     = 17400;   // 模块3 一轮总时长（进度条匀速填充用）
@@ -761,6 +762,13 @@ svg.lucide { stroke-width: 1.8; }
       labStatus.className = 'lab-status is-' + state;
       labContent.className = 'lab-content is-' + state;
       labText.textContent = map[state];
+      // 设备静止 / 运行：仅在环节4 active(running) 播放，其余状态暂停
+      if (state === 'running') {
+        labVideo.play().catch(() => {});
+      } else {
+        labVideo.pause();
+        if (state === 'pending') labVideo.currentTime = 0;
+      }
     }
 
     function focusLeft()  { panelLeft.classList.remove('dim', 'is-done'); panelLeft.classList.add('is-active'); panelRight.classList.remove('is-active'); panelRight.classList.add('dim'); }

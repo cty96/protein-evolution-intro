@@ -17,12 +17,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.font.im/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
-<script type="importmap">
-{ "imports": {
-  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-} }
-</script>
 <style>
 /* ════ §1.1 色彩原语 ════ */
 :root {
@@ -535,8 +529,7 @@ svg.lucide { stroke-width: 1.8; }
 .lab-status.is-done    { background: var(--vermilion-bg); color: var(--vermilion); }
 @keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 .lab-video-wrap { flex: 1; min-height: 0; width: 100%; position: relative; z-index: 2; overflow: hidden; }
-#device3d { position: absolute; inset: 0; }
-#device3d canvas { display: block; }
+.lab-video-wrap video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* 设备监控 HUD：左上角标 + 左下读数 */
 .lab-tag {
@@ -688,7 +681,7 @@ svg.lucide { stroke-width: 1.8; }
         <div class="lab-status is-pending"><span class="lab-dot"></span><span class="lab-text">待启动</span></div>
         <span class="lab-tag">AMix · SANDBOX-04</span>
         <div class="lab-video-wrap">
-          <div id="device3d"></div>
+          <video id="labVideo" src="asset/lab.mp4" autoplay loop muted playsinline></video>
         </div>
         <div class="lab-scan"></div>
         <div class="lab-readout">
@@ -950,162 +943,6 @@ svg.lucide { stroke-width: 1.8; }
     }
     run();
   })();
-</script>
-<script type="module">
-/* 高通量定向进化湿实验沙盒 · 纯代码生成（蓝点 stipple + 白色结构框线）
-   结构参照 GLB：白色机壳(开放前舱)+顶部 X 龙门梁 + 竖直机头(双黑色喷嘴)
-   + 顶部黑色拖链(能量链)绕跨 + 三组试管架(蓝/蓝/白盖) + 双抽屉底座
-   动效按视频：机头沿 X 平移 → 向下探入取样（仅运行态播放）*/
-import * as THREE from 'three';
-(function(){
-  const container=document.getElementById('device3d');
-  if(!container) return;
-  const labContent=document.getElementById('labContent');
-  const BLUE=new THREE.Color('#7aa5db');
-
-  const stip=new THREE.ShaderMaterial({
-    uniforms:{ u_color:{value:BLUE.clone()}, uYmin:{value:-3.0}, uYmax:{value:3.0} },
-    vertexShader:`varying float vY; void main(){ vec4 wp=modelMatrix*vec4(position,1.0); vY=wp.y;
-      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-    fragmentShader:`uniform vec3 u_color; uniform float uYmin,uYmax; varying float vY;
-      float hash(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
-      void main(){ vec2 sp=gl_FragCoord.xy*0.6; float n=hash(floor(sp));
-        float fade=smoothstep(uYmin,uYmax,vY)*0.40; if(n<1.0-fade) discard;
-        gl_FragColor=vec4(u_color,1.0); }`,
-    transparent:true, side:THREE.DoubleSide, depthWrite:false
-  });
-  const edge   =new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.62 });
-  const edgeDim =new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.30 });
-  const edgeDark=new THREE.LineBasicMaterial({ color:new THREE.Color('#9fb2c8'), transparent:true, opacity:0.55 }); // 黑色喷嘴/拖链
-  const edgeBlue=new THREE.LineBasicMaterial({ color:new THREE.Color('#5b88c2'), transparent:true, opacity:0.9 });  // 蓝盖试管
-  const edgeWhite=new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.95 });// 白盖试管
-
-  const machine=new THREE.Group();
-  const solid=(geo,x=0,y=0,z=0,em=edge,p=machine)=>{ const g=new THREE.Group();
-    g.add(new THREE.Mesh(geo,stip)); g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),em));
-    g.position.set(x,y,z); p.add(g); return g; };
-  const bar=(geo,x=0,y=0,z=0,m=edge,p=machine)=>{ const g=new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),m);
-    g.position.set(x,y,z); p.add(g); return g; };
-
-  const W=3.9,H=4.2,D=4.2;
-  const Hbase=1.0, baseTop=-H/2+Hbase, Hup=H-Hbase, wallCY=baseTop+Hup/2;
-  const deckTopY=baseTop+0.12;
-
-  // —— 底座 + 抽屉 + 支脚 ——
-  solid(new THREE.BoxGeometry(W,Hbase,D), 0,-H/2+Hbase/2,0);
-  bar(new THREE.BoxGeometry(0.05,Hbase*0.74,0.05), 0,-H/2+Hbase/2, D/2);          // 抽屉分缝
-  bar(new THREE.BoxGeometry(W*0.94,0.05,0.05), 0,-H/2+Hbase*0.5, D/2, edgeDim);    // 抽屉横线
-  for(const sx of[-1,1]) for(const sz of[-1,1])
-    bar(new THREE.CylinderGeometry(0.13,0.13,0.18,12), sx*(W/2-0.32),-H/2-0.05, sz*(D/2-0.32), edgeDim);
-  // —— 工作台面（navy 甲板）——
-  solid(new THREE.BoxGeometry(W-0.34,0.12,D-0.34), 0, deckTopY-0.06, 0);
-  // —— 机壳：左右侧板 + 背板 + 顶后盖 + 前上沿（前舱开放）——
-  solid(new THREE.BoxGeometry(0.10,Hup,D), -W/2, wallCY, 0);
-  solid(new THREE.BoxGeometry(0.10,Hup,D),  W/2, wallCY, 0);
-  solid(new THREE.BoxGeometry(W,Hup,0.10), 0, wallCY, -D/2);
-  solid(new THREE.BoxGeometry(W,0.20,D*0.5), 0, H/2-0.10, -D*0.25);                // 顶后盖
-  bar(new THREE.BoxGeometry(W,0.20,0.12), 0, H/2-0.10, D/2-0.06, edge);            // 前上沿横梁
-  bar(new THREE.BoxGeometry(0.5,0.5,0.05), -W/2+0.06, wallCY+0.5, D*0.22, edgeDim);// 左侧控制面板
-
-  // —— 顶部 X 龙门横梁 ——
-  const beamY=1.0, beamZ=D*0.06;
-  solid(new THREE.BoxGeometry(W-0.24,0.7,0.95), 0, beamY, beamZ);
-  bar(new THREE.BoxGeometry(W-0.24,0.04,0.97), 0, beamY+0.12, beamZ, edgeDim);     // 梁面导轨缝
-
-  // —— 机头（沿 X 平移）：竖直机头壳 + 双黑色喷嘴(下探组 · Y 升降) ——
-  //  几何对齐：试管盖顶 ≈ y=-0.38（rack: deckTopY+0.10+0.45+0.05）；机头位于前排试管 z 上方
-  const RZ=D*0.08;                                  // 与 rack() 内 rz 一致
-  const head=new THREE.Group(); machine.add(head); head.position.set(-1.06, beamY, RZ+0.19);
-  solid(new THREE.BoxGeometry(0.86,1.5,0.66), 0, 0.55, 0, edge, head);            // 竖直机头壳（高出顶盖）
-  const tool=new THREE.Group(); head.add(tool);                                    // 下探组
-  bar(new THREE.BoxGeometry(0.7,0.3,0.5), 0,-0.18,0.0, edgeDark, tool);            // 黑色连接座
-  for(const dx of[-0.19,0.19]){
-    bar(new THREE.CylinderGeometry(0.13,0.13,0.5,16), dx,-0.5,0.0, edgeDark, tool); // 喷嘴
-    bar(new THREE.CylinderGeometry(0.02,0.085,0.18,12), dx,-0.8,0.0, edge, tool);   // 针尖（静止 y≈0.2 · 在管口上方）
-  }
-
-  // —— 顶部黑色拖链(能量链)绕跨右侧 ——
-  const cc=[ new THREE.Vector3(0.55,beamY+1.05,beamZ+0.35),
-             new THREE.Vector3(W*0.30,beamY+1.5,beamZ),
-             new THREE.Vector3(W*0.40,H/2+0.16,0.0),
-             new THREE.Vector3(W*0.34,H/2,-D*0.18),
-             new THREE.Vector3(W*0.24,beamY+0.7,-D*0.34) ];
-  const ccTube=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cc), 60, 0.15, 8, false);
-  machine.add(new THREE.Mesh(ccTube,stip));
-  machine.add(new THREE.LineSegments(new THREE.EdgesGeometry(ccTube,18), edgeDark));
-
-  // —— 三组试管架（左蓝/中蓝/右白盖）——
-  function rack(rx, capMat){
-    const rz=D*0.08, ty=deckTopY+0.10;
-    solid(new THREE.BoxGeometry(0.96,0.18,0.86), rx, ty, rz, edgeDim);            // 托盘
-    for(let i=0;i<5;i++) for(let j=0;j<2;j++){
-      const tx=rx-0.34+i*0.17, tz=rz-0.19+j*0.38;
-      bar(new THREE.CylinderGeometry(0.066,0.066,0.34,12), tx, ty+0.24, tz, edgeDim); // 管身
-      const cap=solid(new THREE.CylinderGeometry(0.072,0.072,0.1,12), tx, ty+0.45, tz, capMat); // 盖
-    }
-  }
-  rack(-1.06, edgeBlue);
-  rack( 0.0 , edgeBlue);
-  rack( 1.06, edgeWhite);
-
-  stip.uniforms.uYmin.value=-H/2-0.7; stip.uniforms.uYmax.value=H/2+0.7;
-
-  const scene=new THREE.Scene(); scene.add(machine);
-  const grid=new THREE.GridHelper(11, 22, new THREE.Color('#5b88c2'), new THREE.Color('#34404f'));
-  grid.position.y=-H/2-0.03; grid.material.transparent=true; grid.material.opacity=.55; grid.material.depthWrite=false;
-  machine.add(grid);
-  const go=new THREE.Vector3(-W/2-0.25,-H/2,D/2+0.25);
-  for(const dir of [[0.85,0,0],[0,0.85,0],[0,0,0.85]]){
-    const p2=go.clone().add(new THREE.Vector3(dir[0],dir[1],dir[2]));
-    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([go,p2]), edgeDim));
-  }
-
-  let w=container.clientWidth||800, h=container.clientHeight||600;
-  const F=6.8; let aspect=w/h;
-  const camera=new THREE.OrthographicCamera(F*aspect/-2,F*aspect/2,F/2,F/-2,0.01,100);
-  camera.position.set(-8,5.0,11); camera.lookAt(0,0.1,0);   // 前-左-上：x/y/z 三轴可见
-
-  const renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.setSize(w,h);
-  container.appendChild(renderer.domElement);
-
-  // —— 取样动效（按视频）：各架上方平移 → 向下探入 → 停留 → 抬起 ——
-  const stops=[-1.06,0.0,1.06];   // 仅停在三组试管架中心，针尖下探到管口
-  const TR=1.2,TD=0.55,TH=0.5,TL=0.55, STEP=TR+TD+TH+TL, DESC=0.6;   // 下探 0.6 → 针尖 y≈-0.4（触及管口 -0.38）
-  const ease=x=> x<=0?0 : x>=1?1 : x*x*(3-2*x);
-  function armState(tt){
-    const total=stops.length*STEP; tt=((tt%total)+total)%total;
-    const i=Math.floor(tt/STEP), local=tt-i*STEP;
-    const fromX=stops[(i-1+stops.length)%stops.length], toX=stops[i];
-    let x=toX, dip=0;
-    if(local<TR){ x=fromX+(toX-fromX)*ease(local/TR); }
-    else { const l=local-TR;
-      if(l<TD) dip=-DESC*ease(l/TD);
-      else if(l<TD+TH) dip=-DESC;
-      else dip=-DESC*(1-ease((l-TD-TH)/TL)); }
-    return {x,dip};
-  }
-
-  const clock=new THREE.Clock(); let prev=0, armT=0;
-  function animate(){
-    requestAnimationFrame(animate);
-    const t=clock.getElapsedTime(); const dt=t-prev; prev=t;
-    const run = labContent && labContent.classList.contains('is-running');
-    if(run) armT += dt;
-    machine.rotation.y=Math.sin(t*0.16)*0.12;
-    const s=armState(armT);
-    head.position.x=s.x; tool.position.y=s.dip;
-    renderer.render(scene,camera);
-  }
-  animate();
-
-  function resize(){ w=container.clientWidth; h=container.clientHeight; if(!w||!h) return;
-    aspect=w/h; camera.left=F*aspect/-2; camera.right=F*aspect/2; camera.top=F/2; camera.bottom=F/-2;
-    camera.updateProjectionMatrix(); renderer.setSize(w,h); }
-  new ResizeObserver(resize).observe(container);
-  window.addEventListener('resize',resize);
-})();
 </script>
 </body>
 </html>

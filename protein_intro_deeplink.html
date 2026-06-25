@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<!--
+  新一代蛋白质大模型 书生·AMix — DeepLink 大屏 v2.0 conformant 版本
+  conform: deeplink-v2.0
+  说明：保留原「居中等比缩放 1280×720 stage + 四模块交互逻辑」，
+        视觉/动效改写为 deeplink大屏-style-guide.md v2.0 规范。
+        画布沿用 transform:scale 居中策略（按用户要求保留布局），
+        故内部沿用设计 px（等价于 guide v1.0 scale 画布），其余原语全部对齐 v2.0。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新一代蛋白质大模型 书生·AMix · DeepLink v2.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.font.im">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.font.im/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════ §1.1 原语层 · 整段复制 ════ */
+:root {
+  /* 文字色阶（冷白系） */
+  --ink: #e8ebf0;
+  --ink-soft: #b3b8c0;
+  --ink-mute: #828892;
+  --ink-faint: #555a62;
+  /* 表面色阶 */
+  --paper: #14161b;
+  --paper-warm: #1c1f26;
+  --paper-cool: #181a20;
+  /* 分隔线 */
+  --rule: #2b2f37;
+  --rule-soft: #20242b;
+  /* 主色 · 朱砂蓝 7 阶（H≈214°） */
+  --vermilion-1: #1a2230;
+  --vermilion-2: #233048;
+  --vermilion-3: #2c4068;
+  --vermilion-4: #3d5d8e;
+  --vermilion-5: #5b88c2;
+  --vermilion-6: #7aa5db;
+  --vermilion-7: #a0c2e8;
+  --vermilion: var(--vermilion-6);
+  --vermilion-soft: var(--vermilion-5);
+  --vermilion-bg: var(--vermilion-2);
+  --vermilion-deep: var(--vermilion-7);
+  /* 语义色（四阶） */
+  --success: #a4b870;
+  --success-soft: #859554;
+  --success-bg: #1d2418;
+  --success-deep: #c0d490;
+  --warning: #d4ad6a;
+  --warning-soft: #b89253;
+  --warning-bg: #251f17;
+  --warning-deep: #e8c688;
+  --error: #e57878;
+  --error-soft: #c25858;
+  --error-bg: #2a1818;
+  --error-deep: #f29595;
+  --rec-red: #ec5f50;
+  /* 字体栈 */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans SC', sans-serif;
+  --font-serif: 'Cormorant Garamond', 'Noto Serif SC', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  /* 时序 token */
+  --t-fast: .12s;
+  --t-base: .15s;
+  --t-mid: .22s;
+  --t-slow: .35s;
+  --ease: cubic-bezier(.2, 0, 0, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  /* 阴影阶梯（唯三登记 · 大屏几乎不用） */
+  --shadow-overlay: 0 8px 24px rgba(0,0,0,.5);
+  --shadow-focus: 0 0 0 2px rgba(231,234,239,.18), 0 1px 4px rgba(0,0,0,.5);
+}
+html { color-scheme: dark; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* §1.8 Reset / Base · §8.2 背景必须 --paper 纯色（无 glow / 无粒子） */
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* §6.2/§7 数值等宽 */
+.num, [class*="num"], .ts, .seq-text, .stat-desc-label, .seq-tag, .util {
+  font-variant-numeric: tabular-nums;
+}
+
+/* §7 入场 */
+@keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.appear { animation: slideUp var(--t-mid) var(--ease) both; }
+
+/* §7 reduced-motion 降级（必带） */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  .flow-particle { display: none; }
+}
+
+/* ════ STAGE · 保留居中等比缩放（1280×720 设计画布） ════ */
+.slide {
+  width: 1280px;
+  height: 720px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 22px 64px;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* ════ HEADER · §2.2 eyebrow + §2.4 双语主标题（Cormorant 朱砂强调） ════ */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--vermilion);
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.eyebrow::before, .eyebrow::after {
+  content: ""; width: 26px; height: 1px; background: var(--vermilion);
+}
+.main-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 31px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+.main-title em {
+  font-family: var(--font-serif);   /* Cormorant */
+  font-style: italic;
+  color: var(--vermilion);
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin: 0 2px;
+}
+
+/* ════ §2.3 标题 · §2.2 模块头（单行：Noto Serif 标题 + 等距副标） ════ */
+.module-head {
+  flex-shrink: 0;
+  height: 36px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  white-space: nowrap;
+  padding-bottom: 8px;
+  margin-bottom: 11px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.module-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  transition: color .6s var(--ease);
+}
+.module-sub {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--ink-mute);
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+.module-sub::before {
+  content: "·"; margin-right: 10px; color: var(--ink-faint);
+}
+
+/* ════ 顶行：模块1 + 模块2 ════ */
+.top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);   /* 精确等分 · 与下方对齐 */
+  align-items: stretch;
+  gap: 22px;
+  flex-shrink: 0;
+  height: 158px;
+  margin-top: 2px;
+}
+
+/* §5.2 L1 容器 · 平面卡（2px 圆角 · 无阴影） */
+.space-box, .stats {
+  flex: 1;
+  min-width: 0;
+  background: var(--paper-cool);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.space-box { padding: 13px 22px; }
+.stats { padding: 13px 18px; }
+
+/* ── 模块1：统一空间（读=success / 写=warning，色相区分） ── */
+.rw-diagram {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  position: relative;
+}
+.rw-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.rw-side {
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper-warm);
+  padding: 10px 16px;
+  min-width: 112px;
+}
+.rw-icon {
+  width: 38px; height: 38px;
+  filter: brightness(0) saturate(100%) invert(60%) sepia(33%) saturate(880%) hue-rotate(184deg) brightness(95%) contrast(85%);
+}
+.rw-name {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  line-height: 1.4;
+}
+/* 读=橄榄绿（理解）· 写=沙金（生成）：色相区分，不用形状/大小 */
+.rw-side.understand .rw-icon {
+  filter: brightness(0) saturate(100%) invert(80%) sepia(22%) saturate(530%) hue-rotate(33deg) brightness(94%) contrast(82%);
+}
+.rw-side.understand .rw-name { color: var(--success-deep); }
+.rw-side.generate .rw-icon {
+  filter: brightness(0) saturate(100%) invert(72%) sepia(38%) saturate(560%) hue-rotate(2deg) brightness(92%) contrast(86%);
+}
+.rw-side.generate .rw-name { color: var(--warning-deep); }
+.rw-flow-mid { width: 56px; height: 46px; flex-shrink: 0; display: block; }
+
+/* ── 模块2：指标统计（§6.1 metric 语义 · 类目高亮 + 向上箭头） ── */
+.stats-cards { flex: 1; display: flex; align-items: stretch; min-height: 0; }
+.stat-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px 12px;
+  animation: slideUp var(--t-mid) var(--ease) both;
+}
+.stat-card + .stat-card { border-left: 1px solid var(--rule-soft); }
+.stat-card:nth-child(1) { animation-delay: .06s; }
+.stat-card:nth-child(2) { animation-delay: .12s; }
+.stat-card:nth-child(3) { animation-delay: .18s; }
+.stat-text { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+/* §1.9 风格：向上箭头（朱砂蓝同色渐变填充 · 无 glow） · 提升示意 */
+.stat-arrow {
+  width: 28px; height: 17px; display: block;
+  animation: arrowRise 1.7s ease-in-out infinite;
+}
+.stat-card:nth-child(2) .stat-arrow { animation-delay: .35s; }
+.stat-card:nth-child(3) .stat-arrow { animation-delay: .7s; }
+@keyframes arrowRise {
+  0%   { opacity: 0; transform: translateY(6px); }
+  35%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+/* 类目高亮 = Noto Serif 600 主色（§2.3 title） */
+.stat-cat {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: var(--vermilion);
+}
+.stat-desc-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+/* ════ MAIN：模块3 + 模块4 ════ */
+.main { display: flex; height: 392px; flex-shrink: 0; min-height: 0; }
+.fusion-frame { flex: 1; min-width: 0; display: flex; background: transparent; position: relative; }
+.panels-module {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);   /* 精确等分 · 与上方对齐 */
+  gap: 22px;
+}
+
+/* §6.5 进行中卡片 · 四边流光 + dim/done（active/dim/done 状态机） */
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  background: var(--paper-cool);
+  border: 1px solid var(--rule);
+  border-radius: 4px;           /* §1.5 已登记 4px 例外（col） */
+  padding: 13px 15px;
+  overflow: hidden;
+  transition:
+    opacity .8s var(--ease-out),
+    filter .8s var(--ease-out),
+    transform .8s var(--ease-out),
+    border-color .6s var(--ease),
+    background .6s var(--ease);
+}
+.panel.is-active { border-color: var(--vermilion-4); }
+.panel.is-done   { border-color: var(--success); }
+.panel.dim       { opacity: .5; filter: saturate(.7); transform: scale(.995); }
+
+/* 流光层（始终存在，靠 opacity 切换可见）— §6.5 verbatim */
+.panel::before {
+  content: ''; position: absolute; inset: -1px;
+  pointer-events: none; z-index: 2;
+  border-radius: inherit;
+  background:
+    linear-gradient(90deg, transparent 0%, var(--vermilion-5) 12%, var(--vermilion-7) 50%, var(--vermilion-5) 88%, transparent 100%) no-repeat,
+    linear-gradient(90deg, transparent 35%, var(--vermilion-7) 50%, transparent 65%) no-repeat,
+    linear-gradient(180deg, transparent 0%, var(--vermilion-5) 12%, var(--vermilion-7) 50%, var(--vermilion-5) 88%, transparent 100%) no-repeat,
+    linear-gradient(180deg, transparent 35%, var(--vermilion-7) 50%, transparent 65%) no-repeat,
+    linear-gradient(90deg, transparent 0%, var(--vermilion-5) 12%, var(--vermilion-7) 50%, var(--vermilion-5) 88%, transparent 100%) no-repeat,
+    linear-gradient(270deg, transparent 35%, var(--vermilion-7) 50%, transparent 65%) no-repeat,
+    linear-gradient(180deg, transparent 0%, var(--vermilion-5) 12%, var(--vermilion-7) 50%, var(--vermilion-5) 88%, transparent 100%) no-repeat,
+    linear-gradient(0deg, transparent 35%, var(--vermilion-7) 50%, transparent 65%) no-repeat;
+  background-size: 100% 2px, 40% 2px, 2px 100%, 2px 40%, 100% 2px, 40% 2px, 2px 100%, 2px 40%;
+  filter: drop-shadow(0 0 4px rgba(122,165,219,.5));   /* §0.4 登记例外 */
+  opacity: 0;
+  transition: opacity .85s var(--ease-out);
+}
+.panel.is-active::before { opacity: 1; animation: col-flow 4.4s linear infinite; }
+@keyframes col-flow {
+  0%      { background-position: 0% 0%,   -40% 0%, 100% 0%, 100% -40%, 0% 100%, 140% 100%, 0% 0%, 0% 140%; }
+  25%     { background-position: 0% 0%,   140% 0%, 100% 0%, 100% -40%, 0% 100%, 140% 100%, 0% 0%, 0% 140%; }
+  25.01%  { background-position: 0% 0%,   -40% 0%, 100% 0%, 100% -40%, 0% 100%, 140% 100%, 0% 0%, 0% 140%; }
+  50%     { background-position: 0% 0%,   -40% 0%, 100% 0%, 100% 140%, 0% 100%, 140% 100%, 0% 0%, 0% 140%; }
+  50.01%  { background-position: 0% 0%,   -40% 0%, 100% 0%, 100% -40%, 0% 100%, 140% 100%, 0% 0%, 0% 140%; }
+  75%     { background-position: 0% 0%,   -40% 0%, 100% 0%, 100% -40%, 0% 100%, -40% 100%, 0% 0%, 0% 140%; }
+  75.01%  { background-position: 0% 0%,   -40% 0%, 100% 0%, 100% -40%, 0% 100%, 140% 100%, 0% 0%, 0% 140%; }
+  100%    { background-position: 0% 0%,   -40% 0%, 100% 0%, 100% -40%, 0% 100%, 140% 100%, 0% 0%, 0% -40%; }
+}
+/* 内部渐变叠层（active 时渐入） */
+.panel::after {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(122,165,219,.10) 0%, rgba(122,165,219,.03) 40%, transparent 100%);
+  pointer-events: none; opacity: 0;
+  transition: opacity .8s var(--ease-out);
+}
+.panel.is-active::after { opacity: 1; }
+.panel > * { position: relative; z-index: 1; }
+
+/* ════ 模块3：思维流（prompt 固定 + 六张流程卡 → 序列结果） ════ */
+.chat-box { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 11px; }
+
+/* §5.2 L2 card-emphasis · 朱砂左色带 3px（唯一允许的重音方式） */
+.chat-prompt-fixed {
+  flex-shrink: 0;
+  position: relative;
+  padding: 9px 13px;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--vermilion);
+  border-radius: 2px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink);
+  font-weight: 500;
+  text-align: left;
+}
+.chat-prompt-fixed .md-tag {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--vermilion);
+  margin-right: 8px;
+  vertical-align: 1px;
+}
+
+.flow-stage { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+
+/* 六张流程卡：2 列网格，逐张弹出 */
+.step-cards {
+  position: absolute; inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+  gap: 8px;
+}
+.step-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  background: var(--paper-cool);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  opacity: 0;
+}
+.step-card.show { animation: cardPop .38s var(--ease-out) forwards; }
+@keyframes cardPop {
+  from { opacity: 0; transform: translateY(10px) scale(.95); }
+  to   { opacity: 1; transform: none; }
+}
+/* §6.6 phase-num 章节序号（方形 2px · mono · paper-warm） */
+.sc-num {
+  flex-shrink: 0;
+  width: 21px; height: 21px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: var(--paper-warm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  transition: border-color .4s var(--ease), color .4s var(--ease), background .4s var(--ease);
+}
+.sc-label {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  line-height: 1.3;
+  text-align: left;
+}
+.step-card.done { border-color: var(--success-soft); background: var(--success-bg); }
+.step-card.done .sc-num { border-color: var(--success); color: var(--success); background: var(--success-bg); }
+.step-card.done .sc-label { color: var(--success-deep); }
+.step-cards.fade { animation: stageFade .5s var(--ease) forwards; }
+@keyframes stageFade { to { opacity: 0; transform: translateY(-6px); } }
+
+/* 序列结果：WT 固定 + 突变体逐条 */
+.seq-result {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 11px;
+}
+.seq-result.show { display: flex; animation: slideUp .45s var(--ease) both; }
+.seq-block { display: flex; flex-direction: column; gap: 5px; }
+/* §2.2 .label · mono uppercase 元信息 */
+.seq-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  min-height: 11px;
+}
+.seq-block.mut-block .seq-tag { color: var(--warning); }
+.seq-text {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  word-break: break-all;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--rule-soft);
+  border-radius: 2px;
+  padding: 8px 10px;
+}
+.seq-block.mut-block .seq-text { min-height: 62px; }
+/* 突变高亮：背景 + 边框（§8.2 禁止 glow，改用底色+描边表达） */
+.seq-text .mut {
+  color: var(--warning-deep);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-soft);
+  border-radius: 2px;
+  padding: 0 1px;
+  font-weight: 600;
+  transition: color .4s var(--ease), background .4s var(--ease), border-color .4s var(--ease);
+  animation: mut-breathe 1.6s ease-in-out infinite;
+}
+@keyframes mut-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .62; } }
+/* 打字阶段：高亮关闭 */
+.seq-text.typing .mut {
+  color: var(--ink-soft);
+  background: transparent;
+  border-color: transparent;
+  animation: none;
+}
+
+/* §6.7 weight-fill 风格的时间轴进度条（无 glow · 朱砂渐变） */
+.module-progress {
+  flex-shrink: 0;
+  height: 4px;
+  margin-top: 10px;
+  background: var(--rule-soft);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.module-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--vermilion-4), var(--vermilion-6));
+  transition: width .45s var(--ease-out);
+}
+
+/* ════ 模块4：湿实验沙盒（视频 · 静态首帧 + 运行播放） ════ */
+.lab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  gap: 6px;
+  position: relative;
+}
+/* §5.3 pill 状态徽章 */
+.lab-status {
+  position: absolute;
+  top: 0; right: 0;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 2px;
+  background: var(--paper-warm);
+  color: var(--ink-mute);
+  transition: background .35s var(--ease), color .35s var(--ease);
+}
+.lab-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.lab-status.is-pending { background: var(--paper-warm); color: var(--ink-mute); }
+.lab-status.is-running { background: var(--success-bg); color: var(--success); }
+.lab-status.is-running .lab-dot { animation: live-pulse 1.4s ease-in-out infinite; }
+.lab-status.is-done    { background: var(--vermilion-bg); color: var(--vermilion); }
+@keyframes live-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+
+.lab-video-wrap {
+  flex: 1; min-height: 0;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 4px 0;
+  position: relative; z-index: 2;
+}
+.lab-video {
+  max-height: 100%; max-width: 100%; width: auto;
+  display: block;
+  border-radius: 2px;
+  object-fit: contain;
+  transition: filter .35s var(--ease);
+}
+.lab-content.is-running .lab-video { filter: brightness(1.05); }
+</style>
+</head>
+<body>
+<!-- §1.9 向上箭头渐变（朱砂蓝同色 · 无彩色渐变 / 无 glow） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="arrowGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="var(--vermilion-7)"/>
+    <stop offset="1" stop-color="var(--vermilion-5)"/>
+  </linearGradient>
+</defs></svg>
+
+<div class="slide">
+
+  <!-- ══ HEADER · eyebrow + 双语主标题 ══ -->
+  <div class="header appear">
+    <div class="eyebrow">Protein Language Model</div>
+    <div class="main-title">新一代蛋白质大模型 书生·<em>AMix</em></div>
+  </div>
+
+  <!-- ══ 顶行：模块1 + 模块2 ══ -->
+  <div class="top-row appear">
+
+    <!-- ── 模块1：统一空间 ── -->
+    <div class="space-box">
+      <div class="module-head">
+        <div class="module-title">让蛋白质像文字一样被大模型读和写</div>
+        <div class="module-sub">理解与生成的统一表示</div>
+      </div>
+      <div class="rw-diagram">
+        <div class="rw-item rw-side understand">
+          <img class="rw-icon" src="asset/enzyme.svg" alt="">
+          <div class="rw-name">理解</div>
+        </div>
+
+        <svg class="rw-flow-mid" viewBox="0 0 56 46" fill="none" preserveAspectRatio="none">
+          <line x1="6" y1="16" x2="50" y2="16" stroke="var(--rule)" stroke-width="1"/>
+          <line x1="6" y1="30" x2="50" y2="30" stroke="var(--rule)" stroke-width="1"/>
+          <circle r="1.4" fill="var(--success)" class="flow-particle" opacity="0">
+            <animateMotion dur="2.2s" repeatCount="indefinite" path="M6 16 L50 16"/>
+            <animate attributeName="opacity" dur="2.2s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.2;0.8;1"/>
+          </circle>
+          <circle r="1.4" fill="var(--success)" class="flow-particle" opacity="0">
+            <animateMotion dur="2.2s" begin="1.1s" repeatCount="indefinite" path="M6 16 L50 16"/>
+            <animate attributeName="opacity" dur="2.2s" begin="1.1s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.2;0.8;1"/>
+          </circle>
+          <circle r="1.4" fill="var(--warning)" class="flow-particle" opacity="0">
+            <animateMotion dur="2.6s" repeatCount="indefinite" path="M50 30 L6 30"/>
+            <animate attributeName="opacity" dur="2.6s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.2;0.8;1"/>
+          </circle>
+          <circle r="1.4" fill="var(--warning)" class="flow-particle" opacity="0">
+            <animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" path="M50 30 L6 30"/>
+            <animate attributeName="opacity" dur="2.6s" begin="1.3s" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.2;0.8;1"/>
+          </circle>
+        </svg>
+
+        <div class="rw-item rw-side generate">
+          <img class="rw-icon" src="asset/protein.svg" alt="">
+          <div class="rw-name">生成</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 模块2：真实世界对齐 ── -->
+    <div class="stats">
+      <div class="module-head">
+        <div class="module-title">真实世界对齐</div>
+        <div class="module-sub">从蛋白质语言的 GPT-3 迈向 ChatGPT 时刻</div>
+      </div>
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-text">
+            <svg class="stat-arrow" viewBox="0 0 30 18" aria-hidden="true"><path d="M15 1 L29 17 L20 17 L15 10 L10 17 L1 17 Z" fill="url(#arrowGrad)"/></svg>
+            <span class="stat-cat">转录因子</span>
+            <span class="stat-desc-label">效率提升 50×</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-text">
+            <svg class="stat-arrow" viewBox="0 0 30 18" aria-hidden="true"><path d="M15 1 L29 17 L20 17 L15 10 L10 17 L1 17 Z" fill="url(#arrowGrad)"/></svg>
+            <span class="stat-cat">基因编辑酶</span>
+            <span class="stat-desc-label">活性提升 87×</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-text">
+            <svg class="stat-arrow" viewBox="0 0 30 18" aria-hidden="true"><path d="M15 1 L29 17 L20 17 L15 10 L10 17 L1 17 Z" fill="url(#arrowGrad)"/></svg>
+            <span class="stat-cat">代谢酶</span>
+            <span class="stat-desc-label">下游产量提升 70%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MAIN：模块3 + 模块4 ══ -->
+  <div class="main">
+    <div class="fusion-frame">
+    <div class="panels-module">
+
+      <!-- ── 模块3：自然语言驱动的定向进化 ── -->
+      <div class="panel panel-left" id="panelLeft">
+        <div class="module-head">
+          <div class="module-title">通专融合的自然语言 · 蛋白质语言模型</div>
+          <div class="module-sub">自然语言驱动的蛋白质定向进化</div>
+        </div>
+        <div class="chat-box">
+          <div class="chat-prompt-fixed">
+            <span class="md-tag">Prompt</span>基于 AmeR 蛋白质进行定向进化实验，以提高其与 DNA 的结合能力及自身稳定性
+          </div>
+          <div class="flow-stage">
+            <div class="step-cards" id="stepCards">
+              <div class="step-card"><span class="sc-num">1</span><span class="sc-label">实验设计与参数配置</span></div>
+              <div class="step-card"><span class="sc-num">2</span><span class="sc-label">Amix 定向进化执行</span></div>
+              <div class="step-card"><span class="sc-num">3</span><span class="sc-label">结果提取与最优体确定</span></div>
+              <div class="step-card"><span class="sc-num">4</span><span class="sc-label">突变图谱构建</span></div>
+              <div class="step-card"><span class="sc-num">5</span><span class="sc-label">单点突变库与结构预测</span></div>
+              <div class="step-card"><span class="sc-num">6</span><span class="sc-label">结构效应评估与排序</span></div>
+            </div>
+            <div class="seq-result" id="seqResult">
+              <div class="seq-block">
+                <span class="seq-tag">WT · 野生型原始序列 · 219 aa</span>
+                <div class="seq-text" id="seqWT"></div>
+              </div>
+              <div class="seq-block mut-block">
+                <span class="seq-tag" id="mutTag"></span>
+                <div class="seq-text" id="seqMut"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 时间轴进度条：运行结束时填满 -->
+        <div class="module-progress"><div class="module-progress-fill" id="m3Progress"></div></div>
+      </div>
+
+      <!-- ── 模块4：湿实验沙盒 ── -->
+      <div class="panel panel-right" id="panelRight">
+        <div class="module-head">
+          <div class="module-title">高通量定向进化湿实验沙盒</div>
+          <div class="module-sub">候选序列的真实世界验证</div>
+        </div>
+        <div class="lab-content is-pending" id="labContent">
+          <div class="lab-status is-pending"><span class="lab-dot"></span><span class="lab-text">待启动</span></div>
+          <div class="lab-video-wrap">
+            <video class="lab-video" src="asset/lab.mp4" muted playsinline preload="auto"></video>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+</div>
+<script>
+  /* 等比缩放铺满视口：保持 16:9 比例居中（保留原 stage 策略） */
+  function scaleSlide() {
+    const slide = document.querySelector('.slide');
+    const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    slide.style.transform = `scale(${scale})`;
+    slide.style.transformOrigin = 'center center';
+  }
+  scaleSlide();
+  window.addEventListener('resize', scaleSlide);
+
+  /* ── 模块3 / 模块4 交替主循环（is-active 流光 + dim 聚焦） ── */
+  (function () {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    const panelLeft  = document.getElementById('panelLeft');
+    const panelRight = document.getElementById('panelRight');
+    const stepCards  = document.getElementById('stepCards');
+    const cards      = Array.from(stepCards.querySelectorAll('.step-card'));
+    const seqResult  = document.getElementById('seqResult');
+    const seqWT      = document.getElementById('seqWT');
+    const seqMut     = document.getElementById('seqMut');
+    const mutTag     = document.getElementById('mutTag');
+
+    /* 野生型原始序列（参考 · 不高亮） */
+    const WT = 'MNKTIDQVRKGDRKSDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNALVDAIGFGQIGVFERQICPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILMTAKQDMKCGDYYKSVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTSVIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK';
+    /* 第 10 轮筛选 Top-10 突变体 */
+    const MUTANTS = [
+      { rank: 1,  nll: '2.2693', seq: 'MNKTIDDVRKGDRASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNAIVDAIGLGQIGTFERQIPPLDKSHAPLDRLRHLARSLMEQHHQDHFKHDRVFIQILETAKQDMETGDYYKRVIAKPLAEIIRDGVEAGLFPATDIDVLAETVLSALTYVIHPVLIAGEDIGTLATRVDQLVDLILAGLRNPLAK' },
+      { rank: 2,  nll: '2.2719', seq: 'MNKTIDQVRKGDRASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNALVDAIGLGQIGVFERQIPPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILETAKQDMETGDYYKRVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' },
+      { rank: 3,  nll: '2.2719', seq: 'MNKTIDQVRKGDRASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNALVDAIGLGQIGVFERQIPPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILETAKQDMETGDYYKRVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' },
+      { rank: 4,  nll: '2.2719', seq: 'MNKTIDQVRKGDRASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNALVDAIGLGQIGVFERQIPPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILETAKQDMETGDYYKRVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' },
+      { rank: 5,  nll: '2.2719', seq: 'MNKTIDQVRKGDRASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNALVDAIGLGQIGVFERQIPPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILETAKQDMETGDYYKRVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' },
+      { rank: 6,  nll: '2.2737', seq: 'MNKTIDQVRKGDAASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNALVDAIGLGQIGVFERQIALPDKSHAPLDRLRHLARNLMEQHHCDHFKHIRVFIQILETAKQDMETGDYYKRVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' },
+      { rank: 7,  nll: '2.2758', seq: 'MNKTIDDVRKGDRASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNAVAIADIASALNMSPANVFKHFSSKNAIVDAIGLGQIGTFERQIPPLDKSHAPLDRLRHLARSLMEQHHQDHFKHDRVFIQILETAKQDMTDGYYKRVIAKPLAEIIRDGVEAGLFPATDIDVLAETVLSALTYVIHPVLIAGEDIGTLATRVDQLVDLILAGLRNPLAK' },
+      { rank: 8,  nll: '2.2759', seq: 'MEKTIDQVRKGDRASDLPVRRRPRRPAEETRRDILAKAEELFRERGFNASIADIACALAMSPANVFKHFSSKNALVDAIGLGQIGVFERQIPPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILMTAKQDMETGDYYKRVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTSVIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' },
+      { rank: 9,  nll: '2.2759', seq: 'MEKTIDQVRKGDRASDLPVRRRPRRPAEETRRDILAKAEELFRERGFNASIADIACALAMSPANVFKHFSSKNALVDAIGLGQIGVFERQIPPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILMTAKQDMETGDYYKRVIAKLLAEIIRDGVEAGLYIATDIPVLAETVLHALTSVIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' },
+      { rank: 10, nll: '2.2775', seq: 'MNKTIDQVRKGDRASDLPVRRRPRRSAEETRRDILAKAEELFRERGFNGVAIADIASALNMSPANVFKHFSSKNALVDAIGLGQIGVFERQIPPLDKSHAPLDRLRHLARNLMEQHHQDHFKHIRVFIQILMTAKQDMKSDYYKSVIAKLLAEIIRDGAEAGLYIATDIPVLAETVLHALTSVIHPVLIAQEDIGNLATRCDQLVDLIDAGLRNPLAK' }
+    ];
+
+    /* 逐位比对：把与 WT 不同的残基包进 .mut 高亮（成段合并） */
+    function diffHTML(mut, wt) {
+      let out = '', i = 0;
+      const n = Math.max(mut.length, wt.length);
+      while (i < n) {
+        if ((mut[i] || '') !== (wt[i] || '')) {
+          let run = '';
+          while (i < n && (mut[i] || '') !== (wt[i] || '')) { run += (mut[i] || ''); i++; }
+          out += '<span class="mut">' + run + '</span>';
+        } else { out += mut[i]; i++; }
+      }
+      return out;
+    }
+
+    const labContent = document.getElementById('labContent');
+    const labStatus  = document.querySelector('.lab-status');
+    const labText    = document.querySelector('.lab-text');
+    const labVideo   = document.querySelector('.lab-video');
+    const m3Progress = document.getElementById('m3Progress');
+    // 预加载并停在首帧，未运行时作为静态图
+    labVideo.addEventListener('loadeddata', () => { try { labVideo.pause(); labVideo.currentTime = 0; } catch (e) {} });
+    const promptBox  = document.querySelector('.chat-prompt-fixed');
+    const promptHTML = promptBox.innerHTML;
+    promptBox.style.minHeight = promptBox.offsetHeight + 'px';
+
+    function setLab(state) {
+      const map = { pending: '待启动', running: '运行中', done: '已完成' };
+      labStatus.className = 'lab-status is-' + state;
+      labContent.className = 'lab-content is-' + state;
+      labText.textContent = map[state];
+    }
+
+    /* 聚焦：active 模块亮流光，inactive 模块 dim */
+    function focusLeft()  { panelLeft.classList.remove('dim', 'is-done'); panelLeft.classList.add('is-active'); panelRight.classList.remove('is-active'); panelRight.classList.add('dim'); }
+    function doneLeft()   { panelLeft.classList.remove('is-active'); panelLeft.classList.add('is-done'); }
+    function focusRight() { panelRight.classList.remove('dim', 'is-done'); panelRight.classList.add('is-active'); panelLeft.classList.add('dim'); }
+    function doneRight()  { panelRight.classList.remove('is-active'); panelRight.classList.add('is-done'); }
+
+    /* 进度条：匀速线性填充（一次 transition 贯穿模块3 全程，不再分段跳动） */
+    const M3_DURATION = 17500;   // 模块3 全程估时（ms）
+    function progressReset() {
+      m3Progress.style.transition = 'none';
+      m3Progress.style.width = '0%';
+      void m3Progress.offsetWidth;
+    }
+    function progressRun() {
+      m3Progress.style.transition = 'width ' + M3_DURATION + 'ms linear';
+      m3Progress.style.width = '100%';
+    }
+    function progressFull(instant) {
+      m3Progress.style.transition = instant ? 'none' : 'width .3s linear';
+      m3Progress.style.width = '100%';
+      if (instant) void m3Progress.offsetWidth;
+    }
+
+    function waitVideoEnded(v) {
+      return new Promise(resolve => {
+        let done = false;
+        const finish = () => { if (done) return; done = true; v.removeEventListener('ended', finish); resolve(); };
+        v.addEventListener('ended', finish, { once: true });
+        const fallback = (isFinite(v.duration) && v.duration > 0) ? v.duration * 1000 + 1500 : 12000;
+        setTimeout(finish, fallback);
+      });
+    }
+
+    /* 打字机：保留行内 HTML 结构，仅逐字揭示文字节点 */
+    function typeIn(el, skipSel, frames) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+        acceptNode(n) {
+          if (!n.nodeValue) return NodeFilter.FILTER_REJECT;
+          if (skipSel && n.parentElement && n.parentElement.closest(skipSel)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      const nodes = [];
+      let total = 0;
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        nodes.push({ node, full: node.nodeValue });
+        total += node.nodeValue.length;
+        node.nodeValue = '';
+      }
+      if (!total) return Promise.resolve();
+      return new Promise(resolve => {
+        const perTick = Math.max(2, Math.ceil(total / (frames || 14)));
+        let shown = 0;
+        (function step() {
+          shown = Math.min(total, shown + perTick);
+          let rem = shown;
+          for (const it of nodes) {
+            if (rem >= it.full.length) { it.node.nodeValue = it.full; rem -= it.full.length; }
+            else { it.node.nodeValue = it.full.slice(0, rem); rem = 0; }
+          }
+          if (shown >= total) resolve();
+          else setTimeout(step, 16);
+        })();
+      });
+    }
+
+    function resetModule3() {
+      seqResult.classList.remove('show');
+      seqWT.textContent = '';
+      seqMut.className = 'seq-text';
+      seqMut.innerHTML = '';
+      mutTag.textContent = '';
+      stepCards.classList.remove('fade');
+      stepCards.style.display = '';
+      cards.forEach(c => c.classList.remove('show', 'done'));
+      progressReset();
+    }
+
+    async function runStepCards() {
+      for (const c of cards) {
+        c.classList.add('show');
+        await sleep(440);
+      }
+      await sleep(450);
+      for (const c of cards) { c.classList.add('done'); await sleep(90); }
+      await sleep(650);
+    }
+
+    async function showSequence() {
+      stepCards.classList.add('fade');
+      await sleep(480);
+      stepCards.style.display = 'none';
+      seqResult.classList.add('show');
+      // WT 原始序列固定在 prompt 下方（打字机 · 不高亮）
+      seqWT.textContent = WT;
+      await typeIn(seqWT, null, 60);
+      await sleep(450);
+      // 逐条展示 Top-10 突变体：卡片固定，仅内部序列变化
+      const total = MUTANTS.length;
+      for (let k = 0; k < total; k++) {
+        const m = MUTANTS[k];
+        mutTag.textContent = 'Rank ' + m.rank + ' · progen_nll ' + m.nll;
+        // 1) 打字机逐字显示（高亮关闭）
+        seqMut.className = 'seq-text typing';
+        seqMut.innerHTML = diffHTML(m.seq, WT);
+        await typeIn(seqMut, null, 26);
+        // 2) 点亮所有突变位点
+        seqMut.classList.remove('typing');
+        await sleep(620);
+      }
+      await sleep(300);
+    }
+
+    /* 主循环：模块3 跑完(is-done) → 模块4 视频(is-active) 播完 → 模块3 重启 */
+    async function run() {
+      if (reduce) {
+        promptBox.innerHTML = promptHTML;
+        cards.forEach(c => c.classList.add('show', 'done'));
+        stepCards.style.display = 'none';
+        seqResult.classList.add('show');
+        seqWT.textContent = WT;
+        mutTag.textContent = 'Rank ' + MUTANTS[0].rank + ' · progen_nll ' + MUTANTS[0].nll;
+        seqMut.innerHTML = diffHTML(MUTANTS[0].seq, WT);
+        progressFull(true);
+        panelLeft.classList.add('is-done');
+        setLab('done');
+        return;
+      }
+      while (true) {
+        // ── 模块3 激活（流光），模块4 dim + 视频复位首帧 ──
+        focusLeft();
+        setLab('pending');
+        labVideo.pause();
+        try { labVideo.currentTime = 0; } catch (e) {}
+        resetModule3();
+        progressRun();                 // 启动匀速进度（贯穿模块3 全程）
+        promptBox.innerHTML = promptHTML;
+        await typeIn(promptBox, '.md-tag');
+        await sleep(420);
+
+        await runStepCards();
+        await showSequence();
+
+        // 模块3 完成（流光转为 success 完成态 · 进度条补满）
+        doneLeft();
+        progressFull();
+        await sleep(900);
+
+        // ── 模块4 激活（流光），模块3 dim；视频播放一次 ──
+        focusRight();
+        setLab('running');
+        try { labVideo.currentTime = 0; await labVideo.play(); } catch (e) {}
+        await waitVideoEnded(labVideo);
+        labVideo.pause();
+
+        // 模块4 完成
+        doneRight();
+        setLab('done');
+        await sleep(1000);
+      }
+    }
+    run();
+  })();
+</script>
+</body>
+</html>

@@ -1211,16 +1211,11 @@ import * as THREE from 'three';
   const grid=new THREE.GridHelper(11, 22, new THREE.Color('#5b88c2'), new THREE.Color('#34404f'));
   grid.position.y=-H/2-0.03; grid.material.transparent=true; grid.material.opacity=.55; grid.material.depthWrite=false;
   machine.add(grid);
-  const go=new THREE.Vector3(-W/2-0.25,-H/2,D/2+0.25);
-  for(const dir of [[0.85,0,0],[0,0.85,0],[0,0,0.85]]){
-    const p2=go.clone().add(new THREE.Vector3(dir[0],dir[1],dir[2]));
-    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([go,p2]), edgeDim));
-  }
 
   let w=container.clientWidth||800, h=container.clientHeight||600;
   const F=6.8; let aspect=w/h;
   const camera=new THREE.OrthographicCamera(F*aspect/-2,F*aspect/2,F/2,F/-2,0.01,100);
-  camera.position.set(-8,5.0,11); camera.lookAt(0,0.1,0);   // 前-左-上：x/y/z 三轴可见
+  camera.position.set(-8,5.0,11); camera.lookAt(0,0.1,0);   // 前-左-上视角
 
   const renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));

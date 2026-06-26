@@ -35,13 +35,13 @@
   --paper-cool: #0d121a;
   --rule: #344052;
   --rule-soft: #18202a;
-  --vermilion-1: #1e2d42;
-  --vermilion-2: #2a3e5e;
-  --vermilion-3: #385886;
-  --vermilion-4: #4f78b2;
-  --vermilion-5: #6fa3dc;
-  --vermilion-6: #8db9ea;
-  --vermilion-7: #c0dcff;
+  --vermilion-1: #183153;
+  --vermilion-2: #244a7c;
+  --vermilion-3: #2f68ad;
+  --vermilion-4: #4389e0;
+  --vermilion-5: #60a9ff;
+  --vermilion-6: #83c2ff;
+  --vermilion-7: #b4dcff;
   --vermilion: var(--vermilion-6);
   --vermilion-soft: var(--vermilion-5);
   --vermilion-bg: var(--vermilion-2);
@@ -167,7 +167,20 @@ svg.lucide { stroke-width: 1.8; }
   background: var(--rule);
 }
 .hd-title { font-family: var(--font-serif); font-size: max(38px, 4.14vh); font-weight: 600; color: var(--ink); line-height: 1.1; letter-spacing: .04em; }
-.hd-title em { font-style: normal; color: var(--vermilion); }
+.hd-title em {
+  font-family: 'Cormorant Garamond', var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: #5A98DA;
+}
+.hd-title .brand-cn {
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: #5A98DA;
+}
 .hd-sub { font-family: var(--font-sans); font-size: max(15px, 1.56vh); color: var(--ink-mute); line-height: 1.6; max-width: 64em; }
 /* 右侧实时时钟（无英文）*/
 .hd-clock { flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--sp-6);
@@ -684,7 +697,7 @@ svg.lucide { stroke-width: 1.8; }
 
   <!-- ══ 标题 Header ══ -->
   <header class="title-block appear">
-    <h1 class="hd-title">新一代蛋白质大模型 <em>书生·AMix</em></h1>
+    <h1 class="hd-title">新一代蛋白质大模型 <span class="brand-cn">书生·</span><em>AMix</em></h1>
     <p class="hd-sub">让蛋白质像文字一样被大模型读和写</p>
   </header>
 
@@ -1054,37 +1067,57 @@ svg.lucide { stroke-width: 1.8; }
   })();
 </script>
 <script type="module">
-/* 高通量定向进化湿实验沙盒 · 纯代码生成（蓝点 stipple + 白色结构框线）
+/* 高通量定向进化湿实验沙盒 · 纯代码生成（表面蓝点 + 白色结构框线）
    结构参照 GLB：白色机壳(开放前舱)+顶部 X 龙门梁 + 竖直机头(双黑色喷嘴)
-   + 顶部黑色拖链(能量链)绕跨 + 三组试管架(蓝/蓝/白盖) + 双抽屉底座
+   + 三组试管架(蓝/蓝/白盖) + 双抽屉底座
    动效按视频：机头沿 X 平移 → 向下探入取样（仅运行态播放）*/
 import * as THREE from 'three';
 (function(){
   const container=document.getElementById('device3d');
   if(!container) return;
   const labContent=document.getElementById('labContent');
-  const BLUE=new THREE.Color('#7aa5db');
+  const BLUE=new THREE.Color('#5faeff');
 
-  const stip=new THREE.ShaderMaterial({
-    uniforms:{ u_color:{value:BLUE.clone()}, uYmin:{value:-3.0}, uYmax:{value:3.0} },
-    vertexShader:`varying float vY; void main(){ vec4 wp=modelMatrix*vec4(position,1.0); vY=wp.y;
-      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-    fragmentShader:`uniform vec3 u_color; uniform float uYmin,uYmax; varying float vY;
-      float hash(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
-      void main(){ vec2 sp=gl_FragCoord.xy*0.42; float n=hash(floor(sp));
-        float fade=smoothstep(uYmin,uYmax,vY)*0.18; if(n<1.0-fade) discard;
-        gl_FragColor=vec4(u_color,0.76); }`,
-    transparent:true, side:THREE.DoubleSide, depthWrite:false
+  // 与电催化页一致：几何表面粒子，而不是屏幕随机噪点。
+  const particleMaterial=new THREE.PointsMaterial({
+    color:BLUE.clone(), size:0.07, transparent:true, opacity:0.95, sizeAttenuation:false, depthWrite:false
   });
+  function particleGeometry(geometry,count){
+    const positions=[], pos=geometry.attributes.position;
+    if(geometry.index){
+      const idx=geometry.index.array;
+      for(let i=0;i<count;i++){
+        const tri=Math.floor(Math.random()*(idx.length/3))*3;
+        const a=idx[tri], b=idx[tri+1], c=idx[tri+2];
+        const r1=Math.random(), r2=Math.random(), sr=Math.sqrt(r1);
+        const u=1-sr, v=sr*(1-r2), w=sr*r2;
+        positions.push(
+          u*pos.getX(a)+v*pos.getX(b)+w*pos.getX(c),
+          u*pos.getY(a)+v*pos.getY(b)+w*pos.getY(c),
+          u*pos.getZ(a)+v*pos.getZ(b)+w*pos.getZ(c)
+        );
+      }
+    }else{
+      for(let i=0;i<count;i++){
+        const n=Math.floor(Math.random()*pos.count);
+        positions.push(pos.getX(n),pos.getY(n),pos.getZ(n));
+      }
+    }
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    return geo;
+  }
+  const particleCount=geo=>Math.max(1600,Math.min(18000,Math.round((geo.attributes.position.count||100)*120)));
   const edge   =new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.62 });
   const edgeDim =new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.30 });
-  const edgeDark=new THREE.LineBasicMaterial({ color:new THREE.Color('#9fb2c8'), transparent:true, opacity:0.55 }); // 黑色喷嘴/拖链
-  const edgeBlue=new THREE.LineBasicMaterial({ color:new THREE.Color('#5b88c2'), transparent:true, opacity:0.9 });  // 蓝盖试管
+  const edgeDark=new THREE.LineBasicMaterial({ color:new THREE.Color('#9fb2c8'), transparent:true, opacity:0.55 }); // 黑色喷嘴
+  const edgeBlue=new THREE.LineBasicMaterial({ color:new THREE.Color('#4389e0'), transparent:true, opacity:0.95 });  // 蓝盖试管
   const edgeWhite=new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.95 });// 白盖试管
 
   const machine=new THREE.Group();
   const solid=(geo,x=0,y=0,z=0,em=edge,p=machine)=>{ const g=new THREE.Group();
-    g.add(new THREE.Mesh(geo,stip)); g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),em));
+    g.add(new THREE.Points(particleGeometry(geo,particleCount(geo)),particleMaterial));
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),em));
     g.position.set(x,y,z); p.add(g); return g; };
   const bar=(geo,x=0,y=0,z=0,m=edge,p=machine)=>{ const g=new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),m);
     g.position.set(x,y,z); p.add(g); return g; };
@@ -1126,16 +1159,6 @@ import * as THREE from 'three';
     bar(new THREE.CylinderGeometry(0.02,0.085,0.18,12), dx,-0.8,0.0, edge, tool);   // 针尖（静止 y≈0.2 · 在管口上方）
   }
 
-  // —— 顶部黑色拖链(能量链)绕跨右侧 ——
-  const cc=[ new THREE.Vector3(0.55,beamY+1.05,beamZ+0.35),
-             new THREE.Vector3(W*0.30,beamY+1.5,beamZ),
-             new THREE.Vector3(W*0.40,H/2+0.16,0.0),
-             new THREE.Vector3(W*0.34,H/2,-D*0.18),
-             new THREE.Vector3(W*0.24,beamY+0.7,-D*0.34) ];
-  const ccTube=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cc), 60, 0.15, 8, false);
-  machine.add(new THREE.Mesh(ccTube,stip));
-  machine.add(new THREE.LineSegments(new THREE.EdgesGeometry(ccTube,18), edgeDark));
-
   // —— 三组试管架（左蓝/中蓝/右白盖）——
   function rack(rx, capMat){
     const rz=D*0.08, ty=deckTopY+0.10;
@@ -1150,10 +1173,8 @@ import * as THREE from 'three';
   rack( 0.0 , edgeBlue);
   rack( 1.06, edgeWhite);
 
-  stip.uniforms.uYmin.value=-H/2-0.7; stip.uniforms.uYmax.value=H/2+0.7;
-
   const scene=new THREE.Scene(); scene.add(machine);
-  const grid=new THREE.GridHelper(11, 22, new THREE.Color('#5b88c2'), new THREE.Color('#34404f'));
+  const grid=new THREE.GridHelper(11, 22, new THREE.Color('#4389e0'), new THREE.Color('#34404f'));
   grid.position.y=-H/2-0.03; grid.material.transparent=true; grid.material.opacity=.24; grid.material.depthWrite=false;
   machine.add(grid);
 

@@ -136,29 +136,27 @@ svg.lucide { stroke-width: 1.8; }
 /* ════ STAGE · 流动性适配（铺满视口 · 内部以 flex-grow 比例分配高度）════ */
 .stage {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: var(--paper);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: max(6px, .70vh);
-  padding: 0 max(42px, 4.3vw) max(14px, 1.67vh);
+  gap: var(--sp-16);
+  padding: var(--sp-20) clamp(44px, 5.6vw, 108px);
 }
 
 /* ════ 标题 Header（对齐电催化：左对齐 · 衬线大标题 + 简介 · 下分隔线）════ */
 .title-block {
   flex-shrink: 0;
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: max(8px, .93vh);
-  min-height: max(128px, 14.8vh);
-  padding: max(12px, 1.48vh) max(3px, .37vh);
-  border-bottom: 0;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: var(--sp-16);
+  min-height: clamp(78px, 8.8vh, 118px);
+  padding: var(--sp-20) var(--sp-4) var(--sp-16);
+  border-bottom: 1px solid var(--rule);
 }
-.hd-title { font-family: var(--font-serif); font-size: max(38px, 4.14vh); font-weight: 600; color: var(--ink); line-height: 1.1; letter-spacing: .04em; }
+.hd-title { font-family: var(--font-serif); font-size: var(--fs-28); font-weight: 600; color: var(--ink); line-height: 1.1; letter-spacing: .04em; }
 .hd-title em { font-style: normal; color: var(--vermilion); }
-.hd-sub { font-family: var(--font-sans); font-size: max(15px, 1.56vh); color: var(--ink-mute); line-height: 1.6; max-width: 64em; }
 /* 右侧实时时钟（无英文）*/
 .hd-clock { flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--sp-6);
   font-family: var(--font-mono); font-size: var(--fs-13); letter-spacing: .12em; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
@@ -231,16 +229,82 @@ svg.lucide { stroke-width: 1.8; }
 }
 .module-sub::before { content: "·"; margin-right: var(--sp-10); color: var(--ink-faint); font-weight: 400; }
 
+/* ════ 顶行：模块1 + 模块2（精确等分 · 与下方对齐）════ */
+.top-row {
+  flex: 0.92 1 0;
+  min-height: 0;
+  display: flex;
+}
+.top-row > .card { flex: 1; }
+.concept-card {
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--sp-12);
+  padding-top: var(--sp-10);
+  padding-bottom: var(--sp-10);
+  background: linear-gradient(150deg, color-mix(in srgb, var(--vermilion-3) 30%, var(--paper-cool)) 0%, var(--paper-cool) 58%);
+}
+.concept-card > .module-head {
+  width: min(34%, 520px);
+  min-width: 280px;
+  margin-bottom: 0;
+  padding: var(--sp-2) var(--sp-14) var(--sp-2) 0;
+  border-bottom: 0;
+  border-right: 1px solid var(--rule-soft);
+  align-items: center;
+  white-space: normal;
+}
+.concept-card > .module-head .module-title {
+  font-size: var(--fs-16);
+  line-height: 1.35;
+}
+
+/* ── 模块1：理解 / 生成 能力卡 ── */
+.rw { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) max(42px, 4.8vh) minmax(0, 1fr); gap: var(--sp-12); align-items: stretch; overflow: hidden; }
+/* 理解 ↔ 生成 之间的双向流动连接（统一表示空间）*/
+.rw-link { align-self: stretch; position: relative; display: flex; align-items: center; justify-content: center; color: var(--vermilion-deep); pointer-events: none; }
+.rw-link::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--rule); }
+.rw-link i { position: relative; z-index: 1; width: clamp(24px, 2.6vh, 40px); height: clamp(24px, 2.6vh, 40px); padding: 5px; background: var(--paper); filter: drop-shadow(0 0 10px rgba(122,165,219,.22)); animation: rwSpin 3.2s linear infinite; }
+.rl-dot { position: absolute; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: var(--vermilion); box-shadow: 0 0 5px var(--vermilion-soft); opacity: 0; }
+.rl-dot.a { animation: rlR 2.6s linear infinite; }
+.rl-dot.b { animation: rlL 2.6s linear infinite; animation-delay: 1.3s; }
+@keyframes rlR { 0% { left: 6%; opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { left: 94%; opacity: 0; } }
+@keyframes rlL { 0% { left: 94%; opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { left: 6%; opacity: 0; } }
+@keyframes rwSpin { to { transform: rotate(360deg); } }
+.rw-card {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; justify-content: center; text-align: left;
+  gap: var(--sp-10);
+  padding: var(--sp-8) var(--sp-10);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+/* 图标：Lucide 线性 · 朱砂 · 无框 · 放大（与真实世界 icon 风格统一）*/
+.rw-ic {
+  flex: 0 0 clamp(32px, 3.4vh, 50px);
+  width: clamp(32px, 3.4vh, 50px);
+  height: clamp(32px, 3.4vh, 50px);
+  color: var(--vermilion);
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.rw-ic svg { width: clamp(20px, 2.2vh, 32px); height: clamp(20px, 2.2vh, 32px); }
+.rw-name { min-width: 0; font-family: var(--font-serif); font-size: var(--fs-20); font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rw-en { font-family: var(--font-mono); font-size: var(--fs-9); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
 /* ── 模块2：真实世界对齐（参考设计稿：品类标签 + 大数值卡）── */
-.impact-row { flex: 1.48 1 0; min-height: 0; display: flex; transform: translateY(-8px); }
+.impact-row { flex: 1.48 1 0; min-height: 0; display: flex; }
 .impact-row .card { flex: 1; }
 .impact-card { background: transparent; border: 0; padding-left: 0; padding-right: 0; }
 .metrics { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-10); overflow: hidden; }
 .metric {
   position: relative;
-  padding: var(--sp-18) var(--sp-24);
+  padding: var(--sp-12) var(--sp-14);
   display: grid; grid-template-columns: auto minmax(0, .82fr) minmax(0, 1.18fr); grid-template-rows: 1fr; align-items: center; justify-content: stretch; text-align: left;
-  column-gap: var(--sp-16); row-gap: var(--sp-8); min-width: 0; overflow: hidden;
+  column-gap: var(--sp-12); row-gap: var(--sp-6); min-width: 0; overflow: hidden;
   background: linear-gradient(150deg, color-mix(in srgb, var(--vermilion-3) 30%, var(--paper-cool)) 0%, var(--paper-cool) 58%);
   border: 1px solid var(--rule);
   border-radius: 2px;
@@ -272,89 +336,86 @@ svg.lucide { stroke-width: 1.8; }
 /* 迷你趋势线（同色 25%→0% 填充 · §6.9）*/
 
 /* ════ MAIN：模块3 + 模块4 合并入一个外层卡片 ════ */
-.main-row { flex: 4.8 1 0; min-height: 0; display: flex; transform: translateY(-8px); }
+.main-row { flex: 4.8 1 0; min-height: 0; display: flex; }
 .combo-card {
   flex: 1; min-width: 0;
-  display: flex; flex-direction: column; align-items: stretch;
-  gap: var(--sp-10);
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  padding: 0;
+  display: flex; align-items: stretch;
+  background: var(--paper-cool);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  padding: var(--sp-14) var(--sp-16);
   position: relative;
-  overflow: visible;
-}
-.combo-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: stretch;
+  overflow: hidden;
 }
 
-/* 中间发送胶囊：候选序列送实验 / 实验反馈回模型 */
+/* 中间脉冲光带：候选序列送实验 / 实验反馈回模型 */
 .particle-bridge {
-  position: relative; flex: 0 0 max(26px, 2.8vh); align-self: stretch;
+  position: relative; flex: 0 0 max(34px, 3.6vh); align-self: stretch;
   display: flex; align-items: center; justify-content: center;
   overflow: visible; pointer-events: none;
 }
 .particle-bridge::before { content: none; }
-.flow-capsule {
+.flow-beam {
   --flow-color: var(--vermilion-7);
-  --flow-bg: var(--vermilion-bg);
   position: absolute;
   left: 50%; top: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: max(118px, 12vh);
-  padding: var(--sp-5) var(--sp-10);
-  border: 1px solid color-mix(in srgb, var(--flow-color) 72%, transparent);
+  width: max(92px, 10vh);
+  height: max(13px, 1.45vh);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--flow-bg) 72%, var(--paper));
-  color: var(--flow-color);
-  font-family: var(--font-mono);
-  font-size: var(--fs-9);
-  font-weight: 700;
-  letter-spacing: .08em;
-  white-space: nowrap;
+  background:
+    radial-gradient(circle at 50% 50%, var(--flow-color) 0 9%, transparent 10%),
+    linear-gradient(90deg, transparent, color-mix(in srgb, var(--flow-color) 18%, transparent) 18%, var(--flow-color) 50%, color-mix(in srgb, var(--flow-color) 18%, transparent) 82%, transparent);
   opacity: 0;
-  transform: translate(-50%, -50%) scale(.72);
-  box-shadow: 0 0 0 rgba(122,165,219,0);
+  transform: translate(-50%, -50%) scaleX(.2);
+  filter: blur(.2px) drop-shadow(0 0 15px var(--flow-color));
+  mix-blend-mode: screen;
 }
-.flow-capsule::after {
+.flow-beam::before,
+.flow-beam::after {
   content: '';
   position: absolute;
-  inset: -7px -12px;
+  inset: -12px -18px;
   border-radius: inherit;
-  border: 1px solid color-mix(in srgb, var(--flow-color) 38%, transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--flow-color) 32%, transparent), transparent);
   opacity: 0;
 }
-.particle-bridge.flow-right .flow-capsule {
+.flow-beam::after {
+  inset: -2px -26px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--flow-color) 70%, transparent), transparent);
+}
+.particle-bridge.flow-right .flow-beam {
   --flow-color: var(--vermilion-7);
-  --flow-bg: var(--vermilion-bg);
-  animation: capsuleRight .82s var(--ease-out) both;
+  animation: beamRight .72s var(--ease-out) both;
 }
-.particle-bridge.flow-left .flow-capsule {
+.particle-bridge.flow-left .flow-beam {
   --flow-color: var(--success-deep);
-  --flow-bg: var(--success-bg);
-  animation: capsuleLeft .9s var(--ease-out) both;
+  animation: beamLeft .78s var(--ease-out) both;
 }
-.particle-bridge.flow-right .flow-capsule::after,
-.particle-bridge.flow-left .flow-capsule::after { animation: capsuleRing .82s var(--ease-out) both; }
-@keyframes capsuleRight {
-  0% { opacity: 0; transform: translate(calc(-50% - 56px), -50%) scale(.72); box-shadow: none; }
-  22% { opacity: 1; transform: translate(calc(-50% - 30px), -50%) scale(1); }
-  70% { opacity: 1; transform: translate(calc(-50% + 30px), -50%) scale(1.05); box-shadow: 0 0 22px rgba(122,165,219,.34); }
-  100% { opacity: 0; transform: translate(calc(-50% + 60px), -50%) scale(.74); box-shadow: none; }
+.particle-bridge.flow-right .flow-beam::before,
+.particle-bridge.flow-left .flow-beam::before { animation: beamHalo .72s var(--ease-out) both; }
+.particle-bridge.flow-right .flow-beam::after,
+.particle-bridge.flow-left .flow-beam::after { animation: beamCore .42s var(--ease-out) both; }
+@keyframes beamRight {
+  0% { opacity: 0; transform: translate(calc(-50% - 72px), -50%) scaleX(.14); }
+  24% { opacity: 1; transform: translate(calc(-50% - 34px), -50%) scaleX(.72); }
+  62% { opacity: 1; transform: translate(calc(-50% + 34px), -50%) scaleX(1.22); }
+  100% { opacity: 0; transform: translate(calc(-50% + 78px), -50%) scaleX(.18); }
 }
-@keyframes capsuleLeft {
-  0% { opacity: 0; transform: translate(calc(-50% + 58px), -50%) scale(.72); box-shadow: none; }
-  22% { opacity: 1; transform: translate(calc(-50% + 30px), -50%) scale(1); }
-  70% { opacity: 1; transform: translate(calc(-50% - 30px), -50%) scale(1.05); box-shadow: 0 0 22px rgba(164,184,112,.30); }
-  100% { opacity: 0; transform: translate(calc(-50% - 60px), -50%) scale(.74); box-shadow: none; }
+@keyframes beamLeft {
+  0% { opacity: 0; transform: translate(calc(-50% + 72px), -50%) scaleX(.14); }
+  24% { opacity: 1; transform: translate(calc(-50% + 34px), -50%) scaleX(.72); }
+  62% { opacity: 1; transform: translate(calc(-50% - 34px), -50%) scaleX(1.22); }
+  100% { opacity: 0; transform: translate(calc(-50% - 78px), -50%) scaleX(.18); }
 }
-@keyframes capsuleRing {
-  0% { opacity: 0; transform: scale(.78); }
-  35% { opacity: .82; }
-  100% { opacity: 0; transform: scale(1.35); }
+@keyframes beamHalo {
+  0% { opacity: 0; transform: scaleX(.25); }
+  35% { opacity: .85; }
+  100% { opacity: 0; transform: scaleX(1.6); }
+}
+@keyframes beamCore {
+  0% { opacity: 0; transform: scaleX(.2); }
+  48% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1.28); }
 }
 
 /* §6.5 两半内嵌于 combo-card · 透明底 · 默认无边 · 激活/完成才描边 + 流光 */
@@ -374,21 +435,11 @@ svg.lucide { stroke-width: 1.8; }
     border-color .6s var(--ease),
     background .6s var(--ease);
 }
-.panel-left { flex: 0.95 1 0; padding-left: var(--sp-20); padding-right: var(--sp-20); }
+.panel-left { flex: 0.95 1 0; }
 .panel-right {
   flex: 1.05 1 0;
   display: flex;
   flex-direction: column;
-  padding-left: var(--sp-20);
-  padding-right: var(--sp-20);
-}
-.panel-right.is-pending {
-  border-color: var(--rule);
-  background: color-mix(in srgb, var(--paper-warm) 34%, transparent);
-}
-.panel-right.is-pending .lab-content {
-  filter: saturate(.42);
-  opacity: .82;
 }
 .panel-right > .module-head {
   padding-top: var(--sp-6);
@@ -675,13 +726,34 @@ svg.lucide { stroke-width: 1.8; }
   <!-- ══ 标题 Header ══ -->
   <header class="title-block appear">
     <h1 class="hd-title">新一代蛋白质大模型 <em>书生·AMix</em></h1>
-    <p class="hd-sub">让蛋白质像文字一样被大模型读和写</p>
   </header>
+
+
+  <!-- ══ 顶行：模块1 + 模块2 ══ -->
+  <section class="top-row appear">
+
+    <!-- 模块1 -->
+    <div class="card concept-card">
+      <div class="module-head">
+        <span class="module-title">让蛋白质像文字一样被大模型读和写</span>
+      </div>
+      <div class="rw">
+        <div class="rw-card read">
+          <span class="rw-ic"><i data-lucide="book-open"></i></span>
+          <span class="rw-name">理解</span>
+        </div>
+        <span class="rw-link"><span class="rl-dot a"></span><i data-lucide="refresh-cw"></i><span class="rl-dot b"></span></span>
+        <div class="rw-card write">
+          <span class="rw-ic"><i data-lucide="pen-tool"></i></span>
+          <span class="rw-name">生成</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- ══ MAIN：模块3 + 模块4（同一外层卡片 · 中间粒子桥）══ -->
   <section class="main-row">
     <div class="combo-card">
-      <div class="combo-body">
 
     <!-- 模块3 -->
     <div class="panel panel-left" id="panelLeft">
@@ -727,13 +799,11 @@ svg.lucide { stroke-width: 1.8; }
 
     <!-- 中间粒子桥 -->
     <div class="particle-bridge" id="particleBridge">
-      <span class="flow-capsule" id="flowCapsule">
-        <span class="flow-label">候选序列 →</span>
-      </span>
+      <span class="flow-beam" id="flowBeam"></span>
     </div>
 
     <!-- 模块4 -->
-    <div class="panel panel-right is-pending" id="panelRight">
+    <div class="panel panel-right" id="panelRight">
       <div class="module-head">
         <span class="module-title">高通量定向进化湿实验沙盒</span>
         <span class="module-sub">候选序列的真实世界验证</span>
@@ -753,7 +823,6 @@ svg.lucide { stroke-width: 1.8; }
         </div>
       </div>
     </div>
-      </div>
     </div>
   </section>
 
@@ -845,7 +914,6 @@ svg.lucide { stroke-width: 1.8; }
       const map = { pending: '待启动', running: '运行中', done: '已完成' };
       labStatus.className = 'lab-status is-' + state;
       labContent.className = 'lab-content is-' + state;
-      panelRight.classList.toggle('is-pending', state === 'pending');
       labText.textContent = map[state];
     }
     function pulseLab(kind) {
@@ -881,9 +949,6 @@ svg.lucide { stroke-width: 1.8; }
     }
     /* 两卡之间粒子流动（dir: 'right' = 模块3→模块4 · 'left' = 模块4→模块3）*/
     function flowParticles(dir) {
-      const capsule = document.getElementById('flowCapsule');
-      const label = capsule.querySelector('.flow-label');
-      label.textContent = dir === 'right' ? '候选序列 →' : '← 实验反馈';
       bridge.classList.remove('flow-left', 'flow-right');
       void bridge.offsetWidth;
       bridge.classList.add(dir === 'right' ? 'flow-right' : 'flow-left');
@@ -1061,9 +1126,9 @@ import * as THREE from 'three';
       gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
     fragmentShader:`uniform vec3 u_color; uniform float uYmin,uYmax; varying float vY;
       float hash(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
-      void main(){ vec2 sp=gl_FragCoord.xy*0.42; float n=hash(floor(sp));
-        float fade=smoothstep(uYmin,uYmax,vY)*0.18; if(n<1.0-fade) discard;
-        gl_FragColor=vec4(u_color,0.76); }`,
+      void main(){ vec2 sp=gl_FragCoord.xy*0.6; float n=hash(floor(sp));
+        float fade=smoothstep(uYmin,uYmax,vY)*0.40; if(n<1.0-fade) discard;
+        gl_FragColor=vec4(u_color,1.0); }`,
     transparent:true, side:THREE.DoubleSide, depthWrite:false
   });
   const edge   =new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.62 });
@@ -1144,7 +1209,7 @@ import * as THREE from 'three';
 
   const scene=new THREE.Scene(); scene.add(machine);
   const grid=new THREE.GridHelper(11, 22, new THREE.Color('#5b88c2'), new THREE.Color('#34404f'));
-  grid.position.y=-H/2-0.03; grid.material.transparent=true; grid.material.opacity=.24; grid.material.depthWrite=false;
+  grid.position.y=-H/2-0.03; grid.material.transparent=true; grid.material.opacity=.55; grid.material.depthWrite=false;
   machine.add(grid);
   const go=new THREE.Vector3(-W/2-0.25,-H/2,D/2+0.25);
   for(const dir of [[0.85,0,0],[0,0.85,0],[0,0,0.85]]){

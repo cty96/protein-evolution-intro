@@ -448,54 +448,82 @@ svg.lucide { stroke-width: 1.8; }
   --fusion-color: var(--vermilion-5);
   --fusion-bg-pos: 0% center;
   position: relative;
+  z-index: 1;
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--sp-12);
-  padding: var(--sp-14) var(--sp-12);
+  justify-content: stretch;
+  gap: var(--sp-10);
+  padding: 0;
   border-top: 0;
-  background: color-mix(in srgb, var(--paper-warm) 34%, var(--paper-cool));
-  overflow: hidden;
+  background: transparent;
+  overflow: visible;
 }
-.fusion-segment::before {
-  content: '';
-  position: absolute;
-  inset: calc(var(--sp-10) * -1);
-  z-index: 0;
-  background-image:
-    linear-gradient(180deg, rgba(8,11,17,.12), rgba(8,11,17,.42)),
-    url("asset/fusion-texture-gpt.png");
-  background-repeat: no-repeat;
-  background-position: center, var(--fusion-bg-pos);
-  background-size: 100% 100%, 400% 100%;
-  opacity: .9;
-  filter: blur(.6px) saturate(1.18) brightness(.9);
-  pointer-events: none;
+.fusion-segment::before,
+.fusion-segment::after {
+  content: none;
 }
 .fusion-segment::after {
+  content: none;
+}
+.fusion-head {
+  flex: 0 0 auto;
+  min-height: clamp(34px, 4.1vh, 58px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-6);
+  color: color-mix(in srgb, var(--fusion-color) 72%, var(--ink-soft));
+  text-align: center;
+}
+.fusion-icon {
+  width: clamp(32px, 4vh, 58px);
+  height: clamp(32px, 4vh, 58px);
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--fusion-color) 35%, transparent));
+}
+.fusion-frame {
+  position: relative;
+  flex: 0 0 clamp(170px, 22vh, 238px);
+  min-height: 0;
+  display: flex;
+  padding: var(--sp-10) var(--sp-8);
+  border: 1px solid color-mix(in srgb, var(--fusion-color) 58%, var(--rule));
+  border-radius: clamp(12px, 1.5vh, 24px);
+  background: color-mix(in srgb, var(--paper-warm) 30%, var(--paper-cool));
+  box-shadow:
+    inset 0 1px 0 rgba(180,220,255,.08),
+    0 0 0 1px color-mix(in srgb, var(--fusion-color) 10%, transparent),
+    0 0 22px color-mix(in srgb, var(--fusion-color) 14%, transparent);
+  overflow: visible;
+}
+.fusion-frame::before {
   content: '';
   position: absolute;
-  right: calc(var(--sp-10) * -0.5);
-  top: 26%;
-  bottom: 18%;
-  width: 1px;
-  background: var(--rule-soft);
+  inset: var(--sp-6);
+  z-index: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--fusion-color) 34%, transparent) 0 1px, transparent 1.5px) 0 0 / 16px 16px,
+    repeating-linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--fusion-color) 14%, transparent) 18px 19px, transparent 19px 36px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  opacity: .34;
 }
-.fusion-segment:last-child::after { content: none; }
-.fusion-segment > * {
+.fusion-frame > * {
   position: relative;
   z-index: 1;
 }
 .fusion-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-9);
+  font-family: var(--font-serif);
+  font-size: var(--fs-16);
   font-weight: 600;
-  color: color-mix(in srgb, var(--fusion-color) 62%, var(--ink-soft));
-  line-height: 1;
-  letter-spacing: .08em;
+  color: currentColor;
+  line-height: 1.1;
+  letter-spacing: .05em;
   white-space: nowrap;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--fusion-color) 24%, transparent);
 }
 .fusion-tokens {
   width: 100%;
@@ -503,35 +531,61 @@ svg.lucide { stroke-width: 1.8; }
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-6);
+  gap: var(--sp-8);
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
 }
 .fusion-token {
+  position: relative;
   min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: var(--sp-8) var(--sp-6);
+  padding: var(--sp-10) var(--sp-6);
   border-radius: 2px;
   border: 0;
-  background: rgba(8, 11, 17, .32);
+  background: rgba(8, 11, 17, .24);
   backdrop-filter: blur(3px);
   box-shadow:
-    inset 0 1px 0 rgba(180,220,255,.08),
-    0 0 0 1px color-mix(in srgb, var(--fusion-color) 20%, transparent),
-    0 10px 26px rgba(0,0,0,.12);
-  font-family: var(--font-serif);
+    inset 0 1px 0 rgba(180,220,255,.14),
+    inset 0 0 24px rgba(96,169,255,.08),
+    0 0 0 1px color-mix(in srgb, var(--fusion-color) 42%, transparent),
+    0 10px 28px rgba(0,0,0,.14);
+  font-family: var(--font-sans);
   font-size: var(--fs-14);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--ink);
   line-height: 1.1;
   text-align: center;
   white-space: nowrap;
   word-break: keep-all;
+}
+.fusion-token::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--sp-10));
+  width: 1px;
+  height: var(--sp-18);
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--fusion-color) 72%, transparent);
+  opacity: .72;
+}
+.fusion-token::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--sp-10) + var(--sp-18));
+  width: var(--sp-8);
+  height: var(--sp-8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--fusion-color) 80%, var(--ink));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--fusion-color) 54%, transparent);
+  opacity: .9;
 }
 .fusion-segment.text {
   --fusion-color: var(--vermilion-5);
@@ -550,7 +604,7 @@ svg.lucide { stroke-width: 1.8; }
   flex: 1;
   min-height: 0;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   overflow: hidden;
   padding: var(--sp-8) 0 var(--sp-14);
   border: 0;
@@ -558,12 +612,26 @@ svg.lucide { stroke-width: 1.8; }
   background: transparent;
 }
 .fusion-rail {
+  position: relative;
   width: 100%;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--sp-12);
-  align-items: stretch;
+  align-items: center;
+  padding-bottom: var(--sp-24);
+  transform: translateY(calc(var(--sp-10) * -1));
+}
+.fusion-rail::before {
+  content: '';
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: calc(var(--sp-6) + var(--sp-4));
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--vermilion-5) 68%, transparent), color-mix(in srgb, var(--vermilion-7) 78%, transparent), color-mix(in srgb, var(--vermilion-5) 68%, transparent), transparent);
+  box-shadow: 0 0 14px rgba(96,169,255,.18);
+  opacity: .72;
 }
 
 .impact-card {
@@ -1263,31 +1331,51 @@ body.static-flow .rd-dot {
       <div class="panel-fusion-stage">
         <div class="fusion-rail">
           <div class="fusion-segment text">
-            <span class="fusion-label">文本块</span>
-            <div class="fusion-tokens">
-              <span class="fusion-token">结合</span>
-              <span class="fusion-token">稳定性</span>
+            <div class="fusion-head">
+              <i data-lucide="message-square-text" class="fusion-icon"></i>
+              <span class="fusion-label">文本块</span>
+            </div>
+            <div class="fusion-frame">
+              <div class="fusion-tokens">
+                <span class="fusion-token">结合</span>
+                <span class="fusion-token">稳定性</span>
+              </div>
             </div>
           </div>
           <div class="fusion-segment protein">
-            <span class="fusion-label">蛋白质块</span>
-            <div class="fusion-tokens">
-              <span class="fusion-token">MKT</span>
-              <span class="fusion-token">AYI</span>
+            <div class="fusion-head">
+              <i data-lucide="dna" class="fusion-icon"></i>
+              <span class="fusion-label">蛋白质块</span>
+            </div>
+            <div class="fusion-frame">
+              <div class="fusion-tokens">
+                <span class="fusion-token">MKT</span>
+                <span class="fusion-token">AYI</span>
+              </div>
             </div>
           </div>
           <div class="fusion-segment text focus">
-            <span class="fusion-label">文本块</span>
-            <div class="fusion-tokens">
-              <span class="fusion-token">活性</span>
-              <span class="fusion-token">位点</span>
+            <div class="fusion-head">
+              <i data-lucide="message-square-text" class="fusion-icon"></i>
+              <span class="fusion-label">文本块</span>
+            </div>
+            <div class="fusion-frame">
+              <div class="fusion-tokens">
+                <span class="fusion-token">活性</span>
+                <span class="fusion-token">位点</span>
+              </div>
             </div>
           </div>
           <div class="fusion-segment protein">
-            <span class="fusion-label">蛋白质块</span>
-            <div class="fusion-tokens">
-              <span class="fusion-token">VFY</span>
-              <span class="fusion-token">GDS</span>
+            <div class="fusion-head">
+              <i data-lucide="dna" class="fusion-icon"></i>
+              <span class="fusion-label">蛋白质块</span>
+            </div>
+            <div class="fusion-frame">
+              <div class="fusion-tokens">
+                <span class="fusion-token">VFY</span>
+                <span class="fusion-token">GDS</span>
+              </div>
             </div>
           </div>
         </div>

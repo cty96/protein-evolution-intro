@@ -512,17 +512,7 @@ svg.lucide { stroke-width: 1.8; }
   overflow: visible;
 }
 .fusion-frame::before {
-  content: '';
-  position: absolute;
-  inset: var(--sp-6);
-  z-index: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle, color-mix(in srgb, var(--fusion-color) 34%, transparent) 0 1px, transparent 1.5px) 0 0 / 16px 16px,
-    repeating-linear-gradient(90deg, transparent 0 18px, color-mix(in srgb, var(--fusion-color) 14%, transparent) 18px 19px, transparent 19px 36px);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 18%, #000 82%, transparent 100%);
-  opacity: .34;
+  content: none;
 }
 .fusion-frame > * {
   position: relative;
@@ -725,7 +715,7 @@ svg.lucide { stroke-width: 1.8; }
   gap: var(--sp-4);
   font-family: var(--font-sans);
   font-size: var(--fs-14);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--ink-mute);
   letter-spacing: .04em;
   line-height: 1.1;

@@ -515,7 +515,7 @@ svg.lucide { stroke-width: 1.8; }
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: var(--sp-8) var(--sp-10);
+  padding: var(--sp-8) var(--sp-6);
   border-radius: 2px;
   border: 0;
   background: rgba(8, 11, 17, .32);
@@ -525,11 +525,13 @@ svg.lucide { stroke-width: 1.8; }
     0 0 0 1px color-mix(in srgb, var(--fusion-color) 20%, transparent),
     0 10px 26px rgba(0,0,0,.12);
   font-family: var(--font-serif);
-  font-size: var(--fs-16);
+  font-size: var(--fs-14);
   font-weight: 600;
   color: var(--ink);
   line-height: 1.1;
   text-align: center;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 .fusion-segment.text {
   --fusion-color: var(--vermilion-5);
@@ -636,7 +638,7 @@ svg.lucide { stroke-width: 1.8; }
 .m-desc {
   max-width: 100%;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   gap: var(--sp-4);
   font-family: var(--font-sans);
@@ -644,10 +646,11 @@ svg.lucide { stroke-width: 1.8; }
   font-weight: 500;
   color: var(--ink-mute);
   letter-spacing: .04em;
+  line-height: 1.1;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.m-num { font-family: var(--font-serif); font-size: clamp(20px, 2.4vh, 38px); color: var(--vermilion); font-weight: 600; margin-left: var(--sp-2); line-height: 1; }
+.m-num { font-family: inherit; font-size: inherit; color: var(--vermilion); font-weight: 600; margin-left: var(--sp-2); line-height: inherit; }
 .m-rise { display: inline-flex; align-items: center; justify-content: center; color: var(--success-deep); opacity: .9; flex-shrink: 0; }
 .m-rise svg { width: var(--fs-16); height: var(--fs-16); stroke-width: 2.3; }
 /* 迷你趋势线（同色 25%→0% 填充 · §6.9）*/

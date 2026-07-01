@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新一代蛋白质大模型 书生·AMix · DeepLink v2.0</title>
+<!-- conform: deeplink-v2.0 · Protein Dashboard 布局 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+<style>
+:root{
+  --ink:#f1f5fb; --ink-soft:#c6d0dc; --ink-mute:#99a7b6; --ink-faint:#687482;
+  --paper:#080b11; --paper-warm:#141b25; --paper-cool:#0d121a;
+  --rule:#344052; --rule-soft:#18202a;
+  --vermilion-1:#1e2d42; --vermilion-2:#2a3e5e; --vermilion-3:#385886;
+  --vermilion-4:#4f78b2; --vermilion-5:#6fa3dc; --vermilion-6:#8db9ea; --vermilion-7:#c0dcff;
+  --accent-blue:#8dccff; --accent-blue-soft:#5caaff;
+  --vermilion:var(--vermilion-6); --vermilion-soft:var(--vermilion-5);
+  --vermilion-bg:var(--vermilion-2); --vermilion-deep:var(--vermilion-7);
+  --success:#a4b870; --success-bg:#1d2418; --success-deep:#c0d490;
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans SC',sans-serif;
+  --font-serif:'Noto Serif SC',serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
+  --ease:cubic-bezier(.2,0,0,1);
+  --fs-9:max(10px,1.06vh); --fs-10:max(11px,1.19vh); --fs-11:max(12px,1.31vh);
+  --fs-12:max(13px,1.43vh);--fs-13:max(15px,1.56vh);--fs-14:max(16px,1.68vh);
+  --fs-16:max(18px,1.90vh);--fs-18:max(20px,2.15vh);--fs-20:max(22px,2.39vh);
+  --fs-22:max(25px,2.63vh);--fs-24:max(27px,2.88vh);--fs-28:max(31px,3.36vh);--fs-34:max(38px,4.14vh);
+  --sp-2:max(2px,0.20vh); --sp-3:max(2px,0.28vh); --sp-4:max(3px,0.37vh); --sp-5:max(4px,0.46vh);
+  --sp-6:max(5px,0.56vh); --sp-8:max(6px,0.74vh); --sp-10:max(8px,0.93vh); --sp-12:max(9px,1.11vh);
+  --sp-14:max(11px,1.30vh);--sp-16:max(12px,1.48vh);--sp-18:max(14px,1.67vh);--sp-20:max(15px,1.85vh);
+  --sp-24:max(18px,2.22vh);--sp-28:max(21px,2.60vh);--sp-32:max(24px,2.96vh);
+}
+html{color-scheme:dark;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;}
+body{font-family:var(--font-sans); color:var(--ink); background:var(--paper);
+  font-size:var(--fs-14); line-height:1.6; -webkit-font-smoothing:antialiased;}
+svg.lucide{stroke-width:1.8; width:1em; height:1em;}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;}}
+
+/* ── 自适应：填满视口 · 标题 / 主体两栏 ── */
+.stage{position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--paper); overflow:hidden;
+  display:grid; grid-template-rows:auto 1fr; gap:var(--sp-18); padding:0 max(42px,4.3vw) max(34px,3.8vh);}
+.main{display:grid; grid-template-columns:1.25fr 1fr; gap:var(--sp-14); min-height:0;}
+.col-left{display:flex; flex-direction:column; gap:var(--sp-24); min-height:0;}
+
+.panel{position:relative; background:var(--paper-cool); border:1px solid var(--rule); border-radius:2px;}
+
+/* ── 标题 Header（独立横条 · 下方分隔线 · 简介在大标题下方）── */
+.title-block{display:flex; flex-direction:column; justify-content:center; gap:var(--sp-8);
+  min-height:max(118px,13.5vh); padding:var(--sp-12) var(--sp-4); border-bottom:1px solid var(--rule);}
+.hd-title{font-family:var(--font-serif); font-size:var(--fs-34); font-weight:600; color:var(--ink); line-height:1.1; letter-spacing:.04em;}
+.hd-title em{font-style:normal; color:var(--accent-blue);}
+.hd-sub{font-family:var(--font-sans); font-size:var(--fs-13); color:var(--ink-mute); line-height:1.6; max-width:64em;}
+
+/* ── 统一模块标题（衬线 · 卡片外 · 朱砂竖标）── */
+.module{display:flex; flex-direction:column; min-height:0;}
+.mod-head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-10); margin:var(--sp-6) 0 var(--sp-18); flex-shrink:0;}
+.mod-title{font-family:var(--font-serif); font-size:var(--fs-18); font-weight:600; color:var(--accent-blue);
+  letter-spacing:.03em; display:inline-flex; align-items:center; gap:var(--sp-8); line-height:1.1;}
+.badge{font-family:var(--font-mono); font-size:var(--fs-10); letter-spacing:.1em; color:var(--vermilion);
+  padding:var(--sp-3) var(--sp-8); border:1px solid var(--vermilion-3); background:var(--vermilion-1); border-radius:2px; white-space:nowrap; flex-shrink:0;}
+
+/* ════════ KPI（左栏 · 顶 · 高度缩窄）════════ */
+.kpi-module{flex:0.72; min-height:0;}
+.kpi{flex:1; min-height:0; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--sp-10);}
+.metric{background:linear-gradient(150deg, color-mix(in srgb, var(--vermilion-3) 30%, var(--paper-cool)) 0%, var(--paper-cool) 58%); border:1px solid var(--rule); border-radius:2px;
+  padding:var(--sp-14) var(--sp-14); display:flex; flex-direction:column; justify-content:center; gap:var(--sp-12); min-width:0; position:relative; overflow:hidden;}
+.metric-head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-6);}
+.metric-label{font-family:var(--font-mono); font-size:var(--fs-12); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.metric-head .ic{color:var(--accent-blue); font-size:var(--fs-20); flex-shrink:0; filter:drop-shadow(0 0 8px color-mix(in srgb, var(--accent-blue-soft) 68%, transparent));}
+.metric-value{font-family:var(--font-mono); font-size:max(44px,4.9vh); font-weight:500; color:var(--ink); letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:var(--sp-2);}
+.metric-value.up{color:var(--success-deep);}
+.metric-value .unit{font-size:var(--fs-12); font-weight:500; color:var(--ink-mute); letter-spacing:0;}
+.metric-foot{font-family:var(--font-mono); font-size:var(--fs-9); color:var(--ink-mute); font-variant-numeric:tabular-nums; line-height:1.35; display:flex; align-items:center; gap:var(--sp-5); flex-wrap:wrap; margin-top:var(--sp-6);}
+.metric-foot .em{color:var(--ink-soft);}
+.pill{display:inline-flex; align-items:center; gap:3px; font-family:var(--font-mono); font-size:var(--fs-9); font-weight:600; letter-spacing:.04em; padding:1px var(--sp-5); border-radius:2px; background:var(--success-bg); color:var(--success-deep); flex-shrink:0;}
+.dot{width:.5em; height:.5em; border-radius:50%; background:var(--vermilion); flex-shrink:0;}
+.dot-live{animation:live 1.6s ease-in-out infinite;}
+@keyframes live{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+/* ════════ Loop（左栏 · 中 · 真实 1→5 流转）════════ */
+.loop-module{flex:0.9; min-height:0;}
+.loop{flex:1; min-height:0; padding:var(--sp-16) var(--sp-18); display:flex; align-items:center;
+  background:linear-gradient(150deg, color-mix(in srgb, var(--vermilion-3) 30%, var(--paper-cool)) 0%, var(--paper-cool) 58%); border-color:var(--rule);}
+.loop-flow{width:100%; display:flex; align-items:flex-start; padding:0 var(--sp-4);}
+.lnode{flex:1; display:flex; flex-direction:column; align-items:center; gap:var(--sp-8); text-align:center; min-width:0;}
+.lcircle{position:relative; width:max(56px,5.8vh); height:max(56px,5.8vh); border-radius:50%;
+  border:1px solid var(--rule); background:var(--paper); display:flex; align-items:center; justify-content:center; color:var(--accent-blue); font-size:var(--fs-24);
+  filter:drop-shadow(0 0 7px color-mix(in srgb, var(--accent-blue-soft) 52%, transparent));
+  animation:flowNode 5s ease-in-out infinite; animation-delay:var(--d,0s);}
+.lcircle::after{content:''; position:absolute; inset:-5px; border-radius:50%; border:1px solid var(--vermilion); opacity:0;
+  animation:flowRing 5s ease-out infinite; animation-delay:var(--d,0s);}
+@keyframes flowNode{0%,15%{border-color:var(--accent-blue); color:var(--accent-blue); background:var(--vermilion-1);} 24%,100%{border-color:var(--rule); color:var(--accent-blue); background:var(--paper);}}
+@keyframes flowRing{0%{transform:scale(.85); opacity:.7;} 15%{transform:scale(1.35); opacity:0;} 100%{transform:scale(1.35); opacity:0;}}
+.ltag{font-family:var(--font-mono); font-size:var(--fs-10); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-mute);
+  animation:flowTag 5s ease-in-out infinite; animation-delay:var(--d,0s);}
+@keyframes flowTag{0%,15%{color:var(--accent-blue);}24%,100%{color:var(--ink-mute);}}
+.lname{font-family:var(--font-sans); font-size:var(--fs-14); font-weight:600; color:var(--ink); white-space:nowrap;
+  animation:flowName 5s ease-in-out infinite; animation-delay:var(--d,0s);}
+@keyframes flowName{0%,15%{color:var(--accent-blue);}24%,100%{color:var(--ink);}}
+.lconn{flex:0 0 auto; align-self:flex-start; margin-top:max(25px,2.6vh); width:max(22px,2.2vh); height:2px; position:relative;
+  background-image:repeating-linear-gradient(90deg,var(--vermilion-5) 0 4px,transparent 4px 9px); background-size:9px 100%; animation:dash 1.4s linear infinite;}
+@keyframes dash{to{background-position:9px 0;}}
+
+/* ════════ Why（左栏 · 中 · icon 与文字垂直布局）════════ */
+.why-module{flex:1.28; min-height:0;}
+.why-grid{flex:1; min-height:0; display:grid; grid-template-columns:repeat(2, minmax(0, .88fr)); grid-template-rows:1fr 1fr; gap:var(--sp-10); justify-content:center;}
+.why-card{position:relative; background:linear-gradient(150deg, color-mix(in srgb, var(--vermilion-3) 30%, var(--paper-cool)) 0%, var(--paper-cool) 58%); border:1px solid var(--rule); border-radius:2px;
+  padding:var(--sp-12) var(--sp-14); display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:var(--sp-4); min-width:0;}
+.why-ic{flex-shrink:0; width:max(44px,4.6vh); height:max(44px,4.6vh);
+  display:flex; align-items:center; justify-content:center; color:var(--accent-blue); font-size:var(--fs-28);
+  filter:drop-shadow(0 0 9px color-mix(in srgb, var(--accent-blue-soft) 62%, transparent));}
+.why-tx{display:flex; flex-direction:column; gap:var(--sp-3); min-width:0;}
+.why-title{font-family:var(--font-sans); font-size:var(--fs-18); font-weight:600; color:var(--ink); letter-spacing:.01em;}
+.why-desc{font-family:var(--font-sans); font-size:var(--fs-13); color:var(--ink-mute); line-height:1.45;}
+.why-desc sup{font-size:.7em;}
+
+/* ════════ 站点（右栏 · 视频）════════ */
+.station-module{min-height:0;}
+.station{flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden;}
+.station-view{position:relative; flex:1; min-height:0; overflow:hidden; background:#0b1018;}
+.station-view #device3d{position:absolute; inset:0;}
+.station-view #device3d canvas{display:block;}
+.station-view #device-loading{position:absolute; inset:0; z-index:4; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:var(--fs-11); letter-spacing:.2em; text-transform:uppercase; color:var(--ink-mute);}
+.station-view #device-loading::before{content:''; width:14px; height:14px; margin-right:var(--sp-8);
+  border:1.5px solid var(--rule); border-top-color:var(--vermilion); border-radius:50%; animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.station-view .ov{position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg,rgba(12,14,19,.35) 0%,transparent 24%,transparent 68%,rgba(12,14,19,.82) 100%);}
+.readout{position:absolute; left:var(--sp-16); bottom:var(--sp-14); z-index:3; display:flex; flex-direction:column; gap:var(--sp-3);
+  font-family:var(--font-mono); font-size:var(--fs-10); letter-spacing:.06em; color:var(--ink-mute); line-height:1.5;}
+.readout .st{display:flex; align-items:center; gap:var(--sp-6); color:var(--ink-soft);}
+.readout .st .gd{width:.5em; height:.5em; border-radius:50%; background:var(--success); animation:live 1.6s ease-in-out infinite;}
+.readout .v{color:var(--ink-soft);}
+.mc{position:absolute; width:max(14px,1.4vh); height:max(14px,1.4vh); pointer-events:none; opacity:.8; z-index:3;}
+.mc::before,.mc::after{content:''; position:absolute; background:var(--vermilion-4);}
+.mc::before{width:max(12px,1.2vh); height:1px;} .mc::after{width:1px; height:max(12px,1.2vh);}
+.mc.tl{top:var(--sp-10);left:var(--sp-10);} .mc.tr{top:var(--sp-10);right:var(--sp-10);}
+.mc.tr::before,.mc.tr::after{right:0;} .mc.bl{bottom:var(--sp-10);left:var(--sp-10);}
+.mc.bl::before,.mc.bl::after{bottom:0;} .mc.br{bottom:var(--sp-10);right:var(--sp-10);}
+.mc.br::before,.mc.br::after{right:0;bottom:0;}
+@keyframes slideUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.appear{animation:slideUp .22s var(--ease) both;}
+
+/* ── 增强①：背景蓝图网格（边缘渐隐 · 零发光）── */
+.stage::before{content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background-image:linear-gradient(var(--rule-soft) 1px,transparent 1px),linear-gradient(90deg,var(--rule-soft) 1px,transparent 1px);
+  background-size:34px 34px; opacity:.32;
+  -webkit-mask-image:radial-gradient(125% 105% at 50% 34%,#000 30%,transparent 86%);
+          mask-image:radial-gradient(125% 105% at 50% 34%,#000 30%,transparent 86%);}
+.stage>*{position:relative; z-index:1;}
+
+.metric>*{position:relative; z-index:1;}
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ══════ 标题（无卡片）══════ -->
+  <header class="title-block appear">
+    <h1 class="hd-title">新一代蛋白质大模型 <em>书生·AMix</em></h1>
+    <p class="hd-sub">让蛋白质像文字一样被大模型读和写</p>
+  </header>
+
+  <!-- ══════ 主体：左栏（成果/闭环/为什么）+ 右栏（蛋白质模型）══════ -->
+  <div class="main">
+
+    <!-- 左栏 -->
+    <div class="col-left">
+
+      <!-- 闭环成果 -->
+      <div class="module kpi-module appear" style="animation-delay:.05s">
+        <div class="mod-head"><h2 class="mod-title">闭环成果</h2></div>
+        <section class="kpi">
+          <div class="metric">
+            <div class="metric-head"><span class="metric-label">转录因子</span><span class="ic"><i data-lucide="dna"></i></span></div>
+            <div>
+              <div class="metric-value up">50<span class="unit">×</span></div>
+              <div class="metric-foot"><span class="em">效率提升</span><span class="pill"><i data-lucide="trending-up"></i></span></div>
+            </div>
+          </div>
+          <div class="metric">
+            <div class="metric-head"><span class="metric-label">基因编辑酶</span><span class="ic"><i data-lucide="scissors"></i></span></div>
+            <div>
+              <div class="metric-value up">87<span class="unit">×</span></div>
+              <div class="metric-foot"><span class="em">活性提升</span><span class="pill"><i data-lucide="trending-up"></i></span></div>
+            </div>
+          </div>
+          <div class="metric">
+            <div class="metric-head"><span class="metric-label">代谢酶</span><span class="ic"><i data-lucide="flask-conical"></i></span></div>
+            <div>
+              <div class="metric-value up">70<span class="unit">%</span></div>
+              <div class="metric-foot"><span class="em">下游产量提升</span><span class="pill"><i data-lucide="trending-up"></i></span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 价值和挑战 -->
+      <div class="module why-module appear" style="animation-delay:.1s">
+        <div class="mod-head"><h2 class="mod-title">价值和挑战</h2></div>
+        <div class="why-grid">
+          <div class="why-card">
+            <span class="why-ic"><i data-lucide="database"></i></span>
+            <div class="why-tx"><span class="why-title">序列-功能数据不足</span><span class="why-desc">缺乏大规模高质量标准化的“序列-功能”对齐数据。</span></div>
+          </div>
+          <div class="why-card">
+            <span class="why-ic"><i data-lucide="flask-conical"></i></span>
+            <div class="why-tx"><span class="why-title">干湿环境差异巨大</span><span class="why-desc">纯计算设计与真实湿实验环境存在巨大差异。</span></div>
+          </div>
+          <div class="why-card">
+            <span class="why-ic"><i data-lucide="hammer"></i></span>
+            <div class="why-tx"><span class="why-title">手工作坊模式束缚</span><span class="why-desc">研发流程仍深受“手工作坊”模式束缚。</span></div>
+          </div>
+          <div class="why-card">
+            <span class="why-ic"><i data-lucide="timer-reset"></i></span>
+            <div class="why-tx"><span class="why-title">落地效率受限</span><span class="why-desc">研发周期长，成功率不可控，工业化落地效率低。</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI 干湿协同闭环 -->
+      <div class="module loop-module appear" style="animation-delay:.15s">
+        <div class="mod-head"><h2 class="mod-title">AI 干湿协同闭环</h2></div>
+        <section class="panel loop">
+          <div class="loop-flow">
+            <div class="lnode" style="--d:0s"><div class="lcircle"><i data-lucide="clipboard-list"></i></div><span class="ltag">/01 PLAN</span><span class="lname">实验设计</span></div>
+            <span class="lconn"></span>
+            <div class="lnode" style="--d:-4.2s"><div class="lcircle"><i data-lucide="sparkles"></i></div><span class="ltag">/02 AMIX</span><span class="lname">Amix定向进化</span></div>
+            <span class="lconn"></span>
+            <div class="lnode" style="--d:-3.4s"><div class="lcircle"><i data-lucide="file-search"></i></div><span class="ltag">/03 READ</span><span class="lname">结果提取</span></div>
+            <span class="lconn"></span>
+            <div class="lnode" style="--d:-2.6s"><div class="lcircle"><i data-lucide="map"></i></div><span class="ltag">/04 MAP</span><span class="lname">图谱构建</span></div>
+            <span class="lconn"></span>
+            <div class="lnode" style="--d:-1.8s"><div class="lcircle"><i data-lucide="box"></i></div><span class="ltag">/05 3D</span><span class="lname">结构预测</span></div>
+            <span class="lconn"></span>
+            <div class="lnode" style="--d:-1s"><div class="lcircle"><i data-lucide="list-checks"></i></div><span class="ltag">/06 RANK</span><span class="lname">评估与排序</span></div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+
+    <!-- 右栏：湿实验设备模型 -->
+    <div class="module station-module appear" style="animation-delay:.12s">
+      <div class="mod-head"><h2 class="mod-title">高通量定向进化湿实验沙盒</h2><span class="badge">AMix SANDBOX-04</span></div>
+      <section class="panel station">
+        <div class="station-view">
+          <div id="device3d"></div>
+          <div id="device-loading">Loading Model</div>
+          <div class="ov"></div>
+          <span class="mc tl"></span><span class="mc tr"></span><span class="mc bl"></span><span class="mc br"></span>
+          <div class="readout">
+            <div class="st"><span class="gd"></span>SYSTEM STATE: NOMINAL</div>
+            <div class="v">TEMP: <span id="tlT">37.00</span> ℃</div>
+            <div class="v">SEQUENCE: 219 AA</div>
+            <div class="v">RPM: <span id="tlV">220</span></div>
+            <div class="v">CHANNEL: <span id="tlJ">16</span> ON</div>
+            <div class="v">FLOW: <span id="tlF">2.50</span> mL·min⁻¹</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</div>
+<script>lucide.createIcons();</script>
+<script>
+/* 实时读数（纯前端 · 仅视觉） */
+(function(){
+  const base={tlT:37.00, tlV:220, tlJ:16, tlF:2.50};
+  const dec ={tlT:2, tlV:0, tlJ:0, tlF:2};
+  const amp ={tlT:.05, tlV:2, tlJ:0, tlF:.03};
+  function jit(){ for(const k in base){ const el=document.getElementById(k); if(!el)continue;
+    el.textContent=(base[k]+(Math.random()-.5)*2*amp[k]).toFixed(dec[k]); } }
+  jit(); setInterval(jit, 1400);
+})();
+</script>
+<script type="module">
+/* 高通量定向进化湿实验沙盒 · 纯代码生成（表面蓝点 + 白色结构框线）
+   结构参照 GLB：白色机壳(开放前舱)+顶部 X 龙门梁 + 竖直机头(双黑色喷嘴)
+   + 三组试管架(蓝/蓝/白盖) + 双抽屉底座
+   动效按视频：机头沿 X 平移 → 向下探入取样（仅运行态播放）*/
+import * as THREE from 'three';
+(function(){
+  const container=document.getElementById('device3d');
+  if(!container) return;
+  const labContent=document.getElementById('labContent');
+  const BLUE=new THREE.Color('#5faeff');
+
+  // 与电催化页一致：几何表面粒子，而不是屏幕随机噪点。
+  const particleMaterial=new THREE.PointsMaterial({
+    color:BLUE.clone(), size:0.07, transparent:true, opacity:0.95, sizeAttenuation:false, depthWrite:false
+  });
+  function particleGeometry(geometry,count){
+    const positions=[], pos=geometry.attributes.position;
+    if(geometry.index){
+      const idx=geometry.index.array;
+      for(let i=0;i<count;i++){
+        const tri=Math.floor(Math.random()*(idx.length/3))*3;
+        const a=idx[tri], b=idx[tri+1], c=idx[tri+2];
+        const r1=Math.random(), r2=Math.random(), sr=Math.sqrt(r1);
+        const u=1-sr, v=sr*(1-r2), w=sr*r2;
+        positions.push(
+          u*pos.getX(a)+v*pos.getX(b)+w*pos.getX(c),
+          u*pos.getY(a)+v*pos.getY(b)+w*pos.getY(c),
+          u*pos.getZ(a)+v*pos.getZ(b)+w*pos.getZ(c)
+        );
+      }
+    }else{
+      for(let i=0;i<count;i++){
+        const n=Math.floor(Math.random()*pos.count);
+        positions.push(pos.getX(n),pos.getY(n),pos.getZ(n));
+      }
+    }
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+    return geo;
+  }
+  const particleCount=geo=>Math.max(1600,Math.min(18000,Math.round((geo.attributes.position.count||100)*120)));
+  const edge   =new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.62 });
+  const edgeDim =new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.30 });
+  const edgeDark=new THREE.LineBasicMaterial({ color:new THREE.Color('#9fb2c8'), transparent:true, opacity:0.55 }); // 黑色喷嘴
+  const edgeBlue=new THREE.LineBasicMaterial({ color:new THREE.Color('#4389e0'), transparent:true, opacity:0.95 });  // 蓝盖试管
+  const edgeWhite=new THREE.LineBasicMaterial({ color:new THREE.Color('#eef2f8'), transparent:true, opacity:0.95 });// 白盖试管
+
+  const machine=new THREE.Group();
+  const solid=(geo,x=0,y=0,z=0,em=edge,p=machine)=>{ const g=new THREE.Group();
+    g.add(new THREE.Points(particleGeometry(geo,particleCount(geo)),particleMaterial));
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),em));
+    g.position.set(x,y,z); p.add(g); return g; };
+  const bar=(geo,x=0,y=0,z=0,m=edge,p=machine)=>{ const g=new THREE.LineSegments(new THREE.EdgesGeometry(geo,28),m);
+    g.position.set(x,y,z); p.add(g); return g; };
+
+  const W=3.9,H=4.2,D=4.2;
+  const Hbase=1.0, baseTop=-H/2+Hbase, Hup=H-Hbase, wallCY=baseTop+Hup/2;
+  const deckTopY=baseTop+0.12;
+
+  // —— 底座 + 抽屉 + 支脚 ——
+  solid(new THREE.BoxGeometry(W,Hbase,D), 0,-H/2+Hbase/2,0);
+  bar(new THREE.BoxGeometry(0.05,Hbase*0.74,0.05), 0,-H/2+Hbase/2, D/2);          // 抽屉分缝
+  bar(new THREE.BoxGeometry(W*0.94,0.05,0.05), 0,-H/2+Hbase*0.5, D/2, edgeDim);    // 抽屉横线
+  for(const sx of[-1,1]) for(const sz of[-1,1])
+    bar(new THREE.CylinderGeometry(0.13,0.13,0.18,12), sx*(W/2-0.32),-H/2-0.05, sz*(D/2-0.32), edgeDim);
+  // —— 工作台面（navy 甲板）——
+  solid(new THREE.BoxGeometry(W-0.34,0.12,D-0.34), 0, deckTopY-0.06, 0);
+  // —— 机壳：左右侧板 + 背板 + 顶后盖 + 前上沿（前舱开放）——
+  solid(new THREE.BoxGeometry(0.10,Hup,D), -W/2, wallCY, 0);
+  solid(new THREE.BoxGeometry(0.10,Hup,D),  W/2, wallCY, 0);
+  solid(new THREE.BoxGeometry(W,Hup,0.10), 0, wallCY, -D/2);
+  solid(new THREE.BoxGeometry(W,0.20,D*0.5), 0, H/2-0.10, -D*0.25);                // 顶后盖
+  bar(new THREE.BoxGeometry(W,0.20,0.12), 0, H/2-0.10, D/2-0.06, edge);            // 前上沿横梁
+  bar(new THREE.BoxGeometry(0.5,0.5,0.05), -W/2+0.06, wallCY+0.5, D*0.22, edgeDim);// 左侧控制面板
+
+  // —— 顶部 X 龙门横梁 ——
+  const beamY=1.0, beamZ=D*0.06;
+  solid(new THREE.BoxGeometry(W-0.24,0.7,0.95), 0, beamY, beamZ);
+  bar(new THREE.BoxGeometry(W-0.24,0.04,0.97), 0, beamY+0.12, beamZ, edgeDim);     // 梁面导轨缝
+
+  // —— 机头（沿 X 平移）：竖直机头壳 + 双黑色喷嘴(下探组 · Y 升降) ——
+  //  几何对齐：试管盖顶 ≈ y=-0.38（rack: deckTopY+0.10+0.45+0.05）；机头位于前排试管 z 上方
+  const RZ=D*0.08;                                  // 与 rack() 内 rz 一致
+  const head=new THREE.Group(); machine.add(head); head.position.set(-1.06, beamY, RZ+0.19);
+  solid(new THREE.BoxGeometry(0.86,1.5,0.66), 0, 0.55, 0, edge, head);            // 竖直机头壳（高出顶盖）
+  const tool=new THREE.Group(); head.add(tool);                                    // 下探组
+  bar(new THREE.BoxGeometry(0.7,0.3,0.5), 0,-0.18,0.0, edgeDark, tool);            // 黑色连接座
+  for(const dx of[-0.19,0.19]){
+    bar(new THREE.CylinderGeometry(0.13,0.13,0.5,16), dx,-0.5,0.0, edgeDark, tool); // 喷嘴
+    bar(new THREE.CylinderGeometry(0.02,0.085,0.18,12), dx,-0.8,0.0, edge, tool);   // 针尖（静止 y≈0.2 · 在管口上方）
+  }
+
+  // —— 三组试管架（左蓝/中蓝/右白盖）——
+  function rack(rx, capMat){
+    const rz=D*0.08, ty=deckTopY+0.10;
+    solid(new THREE.BoxGeometry(0.96,0.18,0.86), rx, ty, rz, edgeDim);            // 托盘
+    for(let i=0;i<5;i++) for(let j=0;j<2;j++){
+      const tx=rx-0.34+i*0.17, tz=rz-0.19+j*0.38;
+      bar(new THREE.CylinderGeometry(0.066,0.066,0.34,12), tx, ty+0.24, tz, edgeDim); // 管身
+      const cap=solid(new THREE.CylinderGeometry(0.072,0.072,0.1,12), tx, ty+0.45, tz, capMat); // 盖
+    }
+  }
+  rack(-1.06, edgeBlue);
+  rack( 0.0 , edgeBlue);
+  rack( 1.06, edgeWhite);
+
+  const scene=new THREE.Scene(); scene.add(machine);
+  const grid=new THREE.GridHelper(11, 22, new THREE.Color('#4389e0'), new THREE.Color('#34404f'));
+  grid.position.y=-H/2-0.03; grid.material.transparent=true; grid.material.opacity=.24; grid.material.depthWrite=false;
+  machine.add(grid);
+
+  let w=container.clientWidth||800, h=container.clientHeight||600;
+  const F=6.8; let aspect=w/h;
+  const camera=new THREE.OrthographicCamera(F*aspect/-2,F*aspect/2,F/2,F/-2,0.01,100);
+  camera.position.set(-8,5.0,11); camera.lookAt(0,0.1,0);   // 前-左-上视角
+
+  const renderer=new THREE.WebGLRenderer({antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(w,h);
+  container.appendChild(renderer.domElement);
+
+  // —— 取样动效（按视频）：各架上方平移 → 向下探入 → 停留 → 抬起 ——
+  const stops=[-1.06,0.0,1.06];   // 仅停在三组试管架中心，针尖下探到管口
+  const TR=1.2,TD=0.55,TH=0.5,TL=0.55, STEP=TR+TD+TH+TL, DESC=0.6;   // 下探 0.6 → 针尖 y≈-0.4（触及管口 -0.38）
+  const ease=x=> x<=0?0 : x>=1?1 : x*x*(3-2*x);
+  function armState(tt){
+    const total=stops.length*STEP; tt=((tt%total)+total)%total;
+    const i=Math.floor(tt/STEP), local=tt-i*STEP;
+    const fromX=stops[(i-1+stops.length)%stops.length], toX=stops[i];
+    let x=toX, dip=0;
+    if(local<TR){ x=fromX+(toX-fromX)*ease(local/TR); }
+    else { const l=local-TR;
+      if(l<TD) dip=-DESC*ease(l/TD);
+      else if(l<TD+TH) dip=-DESC;
+      else dip=-DESC*(1-ease((l-TD-TH)/TL)); }
+    return {x,dip};
+  }
+
+  const clock=new THREE.Clock(); let prev=0, armT=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    const t=clock.getElapsedTime(); const dt=t-prev; prev=t;
+    const run = !labContent || labContent.classList.contains('is-running');
+    if(run) armT += dt;
+    machine.rotation.y=Math.sin(t*0.16)*0.12;
+    const s=armState(armT);
+    head.position.x=s.x; tool.position.y=s.dip;
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  function resize(){ w=container.clientWidth; h=container.clientHeight; if(!w||!h) return;
+    aspect=w/h; camera.left=F*aspect/-2; camera.right=F*aspect/2; camera.top=F/2; camera.bottom=F/-2;
+    camera.updateProjectionMatrix(); renderer.setSize(w,h); }
+  new ResizeObserver(resize).observe(container);
+  window.addEventListener('resize',resize);
+})();
+</script>
+</body>
+</html>
